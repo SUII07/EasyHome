@@ -1,0 +1,108 @@
+/* Sidebar Styling */
+.dashboard-container {
+    display: flex;
+    height: 100vh;
+  }
+  
+  .sidebar {
+    width: 250px;
+    background-color: #e0f7fa;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .logo {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+  }
+  
+  nav ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .nav-item .icon {
+    margin-right: 10px;
+  }
+  
+  .nav-item.active {
+    font-weight: bold;
+  }
+  
+  .logout {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #d9534f;
+    font-size: 16px;
+  }
+  
+  .logout .icon {
+    margin-right: 10px;
+  }
+  
+  /* Main Content Styling */
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background-color: #f4f4f4;
+    align-items: center;
+  }
+  
+  .profile {
+    display: flex;
+    align-items: center;
+  }
+  
+  .profile-pic {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-left: 10px;
+  }
+  
+  .notification {
+    color: #d9534f;
+    margin-right: 10px;
+  }
+  
+  .content {
+    padding: 20px;
+    background-color: white;
+    flex: 1;
+  }
+
+  
+  .nav-item .hover-link a,
+.logout .hover-link a {
+  pointer-events: none; /* Disable clicking by default */
+  text-decoration: none;
+  color: gray;
+  transition: color 0.3s ease;
+}
+
+.nav-item .hover-link:hover a,
+.logout .hover-link:hover a {
+  pointer-events: auto; /* Enable clicking only on hover */
+  color: black;
+  font-weight: bold;
+}
