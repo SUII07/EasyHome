@@ -86,44 +86,24 @@ body {
     border-radius: 5px;
   }
   
-  .plumbing-services {
-    padding: 30px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    margin: 30px auto;
-    width: 60%;
-  }
-  
-  .plumbing-services h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .service-content {
+  .how-it-works {
+    padding: 50px;
+    background: #e3f8ff;
+    text-align: center;
+}
+
+.how-grid {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 40px; /* Increases the space between image and text */
-  }
-  
-  .service-content img {
-    width: 150px;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.how-step img {
+    width: 80px;
     height: auto;
-    margin-right: 40px; /* Moves the image farther from the list */
-  }
-  
-  .service-content ul {
-    list-style-type: disc;
-    text-align: left;
-    padding-left: 20px;
-  }
-  
-  .service-content ul li {
-    font-size: 16px;
-    margin: 10px 0;
-  }
-  
-  
+    margin-bottom: 10px;
+}
+
   .footer {
     background: #222;
     color: white;

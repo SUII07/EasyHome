@@ -1,26 +1,30 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import Login from './Login';
-import Register from './Register';  
-import Home from './Home';
-import Admin from './Admin';
-import ServiceProvider from './ServiceProvider'; 
-import Emergency from './emergency';
-import Plumbing from './plumbing';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import Login from "./Login";
+import Register from "./Register";
+import Home from "./Home";
+import Admin from "./Admin";
+import Emergency from "./emergency";
+import Booking from "./Booking";
+import ServiceProvider from "./ServiceProvider"; 
+import CustomerDetail from "./CustomerDetail"; 
+import ServiceProviderDetail from "./ServiceProviderDetail"; 
 
 function App() {
   return (
     <Router>
-      <Toaster /> 
+      <Toaster />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Register />} />  
+        <Route path="/signup" element={<Register />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/serviceprovider" element={<ServiceProvider />} />
+        <Route path="/admin/*" element={<Admin />} />
+        <Route path="/serviceprovider" element={<ServiceProvider />} /> 
         <Route path="/emergency" element={<Emergency />} />
-        <Route path="/plumbing" element={<Plumbing />} />
+        <Route path="/Booking" element={<Booking />} />
+        <Route path="/admin/customers/:id" element={<CustomerDetail />} /> 
+        <Route path="/admin/serviceproviders/:id" element={<ServiceProviderDetail />} /> 
         <Route path="/" element={<Login />} />
       </Routes>
     </Router>
@@ -28,4 +32,3 @@ function App() {
 }
 
 export default App;
-

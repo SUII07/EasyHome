@@ -1,217 +1,198 @@
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import { FaHome, FaUsers, FaUserTie, FaEnvelope, FaSignOutAlt } from "react-icons/fa";
-// import "./Admin.css";
-
-// const Admin = () => {
-//   return (
-//     <div className="admin-dashboard">
-//       {/* Sidebar */}
-//       <aside className="sidebar">
-//         <h2 className="logo">EasyHome</h2>
-//         <nav>
-//           <ul>
-//             <li className="nav-item">
-//               <Link to="/dashboard" className="nav-link">
-//                 <FaHome className="icon" />
-//                 Dashboard
-//               </Link>
-//             </li>
-//             <li className="nav-item">
-//               <Link to="/service-provider" className="nav-link">
-//                 <FaUserTie className="icon" />
-//                 Service Provider
-//               </Link>
-//             </li>
-//             <li className="nav-item">
-//               <Link to="/customers" className="nav-link">
-//                 <FaUsers className="icon" />
-//                 Customers
-//               </Link>
-//             </li>
-//             <li className="nav-item">
-//               <Link to="/messages" className="nav-link">
-//                 <FaEnvelope className="icon" />
-//                 Messages
-//               </Link>
-//             </li>
-//           </ul>
-//         </nav>
-//         <div className="logout">
-//           <Link to="/logout" className="nav-link">
-//             <FaSignOutAlt className="icon" />
-//             Logout
-//           </Link>
-//         </div>
-//       </aside>
-
-//       {/* Main Content */}
-//       <main className="main-content">
-//         <header className="header">
-//           <h1>Welcome back, Admin</h1>
-//         </header>
-
-//         {/* Dashboard Overview */}
-//         <section className="dashboard-overview">
-//           <div className="overview-card">Total Customer</div>
-//           <div className="overview-card">Service Provider</div>
-//           <div className="overview-card">Messages</div>
-//         </section>
-//       </main>
-//     </div>
-//   );
-// };
-
-// export default Admin;
-
-
-
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
-import { FaHome, FaUsers, FaUserTie, FaEnvelope, FaSignOutAlt } from "react-icons/fa";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaHome, FaUsers, FaUserTie, FaSignOutAlt } from "react-icons/fa";
 import "./Admin.css";
 
 const Admin = () => {
-  const [customers, setCustomers] = useState([]);
-  const [serviceProviders, setServiceProviders] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [customerCount, setCustomerCount] = useState(0);
+  const [serviceProviderCount, setServiceProviderCount] = useState(0);
+  const [search, setSearch] = useState(""); // Search query
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // Fetch user counts on component mount
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("/api/admin/getuser"); // Adjust API route as needed
-        setCustomers(response.data.customers);
-        setServiceProviders(response.data.serviceProviders);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
-    };
-    fetchUsers();
+    fetchUserCounts();
   }, []);
 
-  const handleDelete = async (id) => {
+  // Fetch users based on the current path (customers or service providers)
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/admin/customers") {
+      fetchUsers("customer", search);
+    } else if (path === "/admin/serviceproviders") {
+      fetchUsers("serviceprovider", search);
+    } else {
+      setUsers([]);
+    }
+  }, [location.pathname, search]);
+
+  const fetchUsers = async (role, search) => {
     try {
-      await axios.post(`/api/admin/delet/${id}`);
-      setServiceProviders(serviceProviders.filter((provider) => provider._id !== id));
+      const response = await fetch(
+        `http://localhost:4000/api/admin/getuser?role=${role}&search=${search}`,
+        {
+          credentials: "include", // Ensure cookies are sent
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchUserCounts = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/admin/getusercounts", {
+        credentials: "include", // Ensure cookies are sent
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setCustomerCount(data.customerCount);
+      setServiceProviderCount(data.serviceProviderCount);
+    } catch (error) {
+      console.error("Error fetching user counts:", error);
+    }
+  };
+
+  // Delete a user
+  const handleDelete = async (userId) => {
+    try {
+      const response = await fetch(`http://localhost:4000/api/admin/delete/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsers(users.filter((user) => user._id !== userId)); // Remove deleted user from the list
+        fetchUserCounts(); // Refresh user counts
+      }
+      console.log(data.message);
     } catch (error) {
       console.error("Error deleting user:", error);
     }
   };
 
+  // Handle logout
+  const handleLogout = async () => {
+    await fetch("http://localhost:4000/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    navigate("/login");
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+  };
+
   return (
     <div className="admin-dashboard">
-      {/* Sidebar */}
       <aside className="sidebar">
         <h2 className="logo">EasyHome</h2>
         <nav>
           <ul>
             <li className="nav-item">
-              <Link to="/dashboard" className="nav-link">
+              <button onClick={() => navigate("/admin")} className="nav-link">
                 <FaHome className="icon" />
                 Dashboard
-              </Link>
+              </button>
             </li>
             <li className="nav-item">
-              <Link to="/service-provider" className="nav-link">
-                <FaUserTie className="icon" />
-                Service Provider
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to="/customers" className="nav-link">
+              <button onClick={() => navigate("/admin/customers")} className="nav-link">
                 <FaUsers className="icon" />
                 Customers
-              </Link>
+              </button>
             </li>
             <li className="nav-item">
-              <Link to="/messages" className="nav-link">
-                <FaEnvelope className="icon" />
-                Messages
-              </Link>
+              <button onClick={() => navigate("/admin/serviceproviders")} className="nav-link">
+                <FaUserTie className="icon" />
+                Service Providers
+              </button>
             </li>
           </ul>
         </nav>
         <div className="logout">
-          <Link to="/logout" className="nav-link">
+          <button onClick={handleLogout} className="nav-link">
             <FaSignOutAlt className="icon" />
             Logout
-          </Link>
+          </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <header className="header">
           <h1>Welcome back, Admin</h1>
         </header>
 
-        {/* Customers Table */}
-        <section>
-          <h2>Registered Customers</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone Number</th>
-                <th>Zip Code</th>
-              </tr>
-            </thead>
-            <tbody>
-  {customers?.length > 0 ? (
-    customers.map((customer) => (
-      <tr key={customer._id}>
-            <td>{customer.FullName}</td>
-            <td>{customer.Email}</td>
-            <td>{customer.PhoneNumber}</td>
-            <td>{customer.ZipCode}</td>
-        </tr>
-        ) )
-          ) : (
-            <tr>
-              <td colSpan="4">No customers found</td>
-              </tr>
-            )}
-          </tbody>
-          </table>
-        </section>
+        {location.pathname === "/admin" && (
+          <section className="dashboard-overview">
+            <div className="overview-card">
+              <h3>Total Customers</h3>
+              <p>{customerCount}</p>
+            </div>
+            <div className="overview-card">
+              <h3>Service Providers</h3>
+              <p>{serviceProviderCount}</p>
+            </div>
+          </section>
+        )}
 
-        {/* Service Providers Table */}
-        <section>
-          <h2>Registered Service Providers</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone Number</th>
-                <th>Zip Code</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-            {serviceProviders?.length > 0 ? (
-            serviceProviders.map((provider) => (
-            <tr key={provider._id}>
-            <td>{provider.FullName}</td>
-            <td>{provider.Email}</td>
-            <td>{provider.PhoneNumber}</td>
-            <td>{provider.ZipCode}</td>
-              <td>
-            <button onClick={() => handleDelete(provider._id)} className="delete-btn">
-             Delete
-              </button>
-            </td>
-            </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5">No service providers found</td>
-            </tr>
-            )}
-          </tbody>
-          </table>
-        </section>
+        {(location.pathname === "/admin/customers" || location.pathname === "/admin/serviceproviders") && (
+          <section className="user-list">
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search by name"
+                value={search}
+                onChange={handleSearchChange}
+              />
+            </div>
+
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Phone Number</th>
+                  <th>Zip Code</th>
+                  {location.pathname === "/admin/serviceproviders" && <th>Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <tr key={user._id}>
+                      <td>{user.FullName}</td>
+                      <td>{user.Email}</td>
+                      <td>{user.PhoneNumber}</td>
+                      <td>{user.ZipCode}</td>
+                      {location.pathname === "/admin/serviceproviders" && (
+                        <td>
+                          <button onClick={() => handleDelete(user._id)}>Delete</button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={location.pathname === "/admin/serviceproviders" ? 5 : 4}>
+                      No {location.pathname === "/admin/customers" ? "customers" : "service providers"} found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </section>
+        )}
       </main>
     </div>
   );

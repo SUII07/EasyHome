@@ -1,11 +1,14 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const BookingSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  providerId: { type: String, required: true },
-  serviceType: { type: String, required: true },
-  price: { type: Number, required: true },
-  status: { type: String, default: 'pending' },
+  customerName: { type: String, required: true }, 
+  serviceType: { type: String, required: true }, 
+  serviceProviderName: { type: String, required: true }, 
+  address: { type: String, required: true },
+  phoneNumber: { type: String, required: true }, 
+  description: { type: String }, 
+  status: { type: String, default: "Pending" }, 
 });
 
-export default mongoose.model('Booking', BookingSchema);
+const Booking = mongoose.model("Booking", BookingSchema);
+export default Booking;

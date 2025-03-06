@@ -44,25 +44,31 @@ const Home = () => {
             <FaHouseUser className="service-icon" />
             <h3>House Cleaning</h3>
             <p>Professional Cleaning services for entire home</p>
+            <Link to="/Booking">
             <button className="btn-primary">Request Service</button>
+            </Link>
           </div>
           <div className="service-card">
             <FaTools className="service-icon" />
             <h3>Repairs & Maintenance</h3>
             <p>Expert repair services for all house systems</p>
+            <Link to="/Booking">
             <button className="btn-primary">Request Service</button>
+            </Link>
           </div>
           <div className="service-card">
             <FaPaintRoller className="service-icon" />
             <h3>Painting</h3>
             <p>Interior and exterior painting services</p>
+            <Link to="/Booking">
             <button className="btn-primary">Request Service</button>
+            </Link>
           </div>
           <div className="service-card">
             <FaWater className="service-icon" />
             <h3>Plumbing</h3>
             <p>Plumbing and Water Damage Services</p>
-            <Link to="/plumbing">
+            <Link to="/Booking">
               <button className="btn-primary">Request Service</button>
             </Link> 
           </div>
@@ -70,7 +76,9 @@ const Home = () => {
             <FaThermometerHalf className="service-icon" />
             <h3>HVAC Services</h3>
             <p>Heating, and air conditioning maintenance</p>
+            <Link to="/Booking">
             <button className="btn-primary">Request Service</button>
+            </Link> 
           </div>
         </div>
       </section>

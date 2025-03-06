@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const serviceProviderSchema = new mongoose.Schema({
+const adminSchema = new mongoose.Schema({
   FullName: {
     type: String,
     required: true,
@@ -25,9 +25,9 @@ const serviceProviderSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    default: "serviceprovider",
+    default: "admin",
   },
 }, { timestamps: true });
 
-const ServiceProviderModel = mongoose.model('ServiceProvider', serviceProviderSchema);
-export default ServiceProviderModel;
+const adminModel = mongoose.model('admin', adminSchema);
+export default adminModel;

@@ -1,70 +1,37 @@
 // import mongoose from "mongoose";
 
-// const userSchema = new mongoose.Schema({
+// // Define the User schema
+// const userSchema = new mongoose.Schema(
+//   {
 //     FullName: {
-//         type: String,
-//         required: true
+//       type: String,
+//       required: true,
 //     },
 //     PhoneNumber: {
-//         type: String,
-//         required: true
+//       type: String,
+//       required: true,
 //     },
 //     ZipCode: {
-//         type: String,
-//         required: true
+//       type: String,
+//       required: true,
 //     },
 //     Email: {
-//         type: String,
-//         required: true,
-//         unique: true
+//       type: String,
+//       required: true,
+//       unique: true,
 //     },
 //     role: {
-//         type: String,
-//         enum: ['admin', 'serviceprovider', 'customer'],
-//         default: "customer"
+//       type: String,
+//       enum: ['admin', 'serviceprovider', 'customer'],
+//       default: 'customer',
 //     },
-//     password: {  
-//         type: String,
-//         required: true
-//     }
-// }, { timestamps: true }); 
+//     password: {
+//       type: String,
+//       required: true,
+//     },
+//   },
+//   { timestamps: true, discriminatorKey: 'role' }
+// );
 
-// const UserModel = mongoose.model("User", userSchema);
-
+// const UserModel = mongoose.model('User', userSchema);
 // export default UserModel;
-
-
-import mongoose from "mongoose";
-
-const userSchema = new mongoose.Schema({
-    FullName: {
-        type: String,
-        required: true
-    },
-    PhoneNumber: {
-        type: String,
-        required: true
-    },
-    ZipCode: {
-        type: String,
-        required: true
-    },
-    Email: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    role: {
-        type: String,
-        enum: ['admin', 'serviceprovider', 'customer'],
-        default: "customer"
-    },
-    password: {  
-        type: String,
-        required: true
-    }
-}, { timestamps: true }); 
-
-const UserModel = mongoose.model("User", userSchema);
-
-export default UserModel;

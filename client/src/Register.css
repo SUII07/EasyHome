@@ -1,25 +1,29 @@
-*{
-    margin: 0px;
-    padding: 0px;
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
-}
-
-body{
+  }
+  
+  body {
     height: auto;
-}
-
-.main-container {
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Background Container */
+  .background-container {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    background: url('/public/hh.jpg');
-    background-position: center;
+    min-height: 100vh;
+    background: url('/public/hh.jpg') no-repeat center center;
     background-size: cover;
     opacity: 0.8;
-}
-
-.register-user {
+  }
+  
+  /* Registration Form Container */
+  .register-user {
     width: 500px;
     padding: 30px;
     background: #E3FFFF;
@@ -27,17 +31,43 @@ body{
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    gap: 20px; 
-}
-
-.lets-get-started {
+    gap: 20px;
+  }
+  
+  .lets-get-started {
     font-size: 36px;
     font-weight: 700;
     color: #000;
     text-align: center;
-}
-
-.button {
+  }
+  
+  /* Input Label Styling */
+  .input-label {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  /* Input Field Styling (Removed extra div) */
+  .input-field {
+    width: 100%;
+    height: 45px;
+    padding: 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    background: white;
+  }
+  
+  .input-field:focus {
+    border-color: #003864;
+  }
+  
+  /* Button Styling */
+  .button {
     width: 100%;
     padding: 10px;
     font-size: 1rem;
@@ -48,19 +78,35 @@ body{
     border-radius: 5px;
     cursor: pointer;
     transition: background 0.3s ease;
-}
-
-.button:hover {
+  }
+  
+  .button:hover {
     background-color: #00509e;
-}
-
-.sign-in {
+  }
+  
+  /* Sign-In Link Styling */
+  .account-sign-in {
+    text-align: center;
+  }
+  
+  .sign-in {
     color: #003864;
     font-weight: bold;
     text-decoration: underline;
     cursor: pointer;
-}
-
-.sign-in:hover {
+  }
+  
+  .sign-in:hover {
     text-decoration: underline;
-}
+  }
+  
+  /* Flexbox for Phone Number and Zip Code */
+  .input-group {
+    display: flex;
+    gap: 10px; /* space between inputs */
+  }
+  
+  .input-field-half {
+    width: 48%; /* make each input take up almost half of the space */
+  }
+  
