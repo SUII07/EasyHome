@@ -2,121 +2,120 @@ import AdminModel from "../models/admin.js";
 import CustomerModel from "../models/Customer.js";
 import ServiceProviderModel from "../models/ServiceProvider.js";
 
-// Fetch users based on role with pagination and search
-const Getuser = async (req, res) => {
+// Get all users
+export const Getuser = async (req, res) => {
   try {
-    const { role, page = 1, limit = 10, search = "" } = req.query; // Default values
-    const skip = (page - 1) * limit;
+    const { role, search } = req.query;
+    let query = {};
 
-    // Create a search query object
-    const searchQuery = search ? { FullName: { $regex: search, $options: "i" } } : {};
-
-    let users;
-    let totalUsers;
-
-    if (role === "admin") {
-      users = await AdminModel.find(searchQuery).skip(skip).limit(limit);
-      totalUsers = await AdminModel.countDocuments(searchQuery);
-    } else if (role === "customer") {
-      users = await CustomerModel.find(searchQuery).skip(skip).limit(limit);
-      totalUsers = await CustomerModel.countDocuments(searchQuery);
-    } else if (role === "serviceprovider") {
-      users = await ServiceProviderModel.find(searchQuery).skip(skip).limit(limit);
-      totalUsers = await ServiceProviderModel.countDocuments(searchQuery);
-    } else {
-      // Fetch all users from all collections with pagination and search
-      const [admins, customers, serviceProviders] = await Promise.all([
-        AdminModel.find(searchQuery).skip(skip).limit(limit),
-        CustomerModel.find(searchQuery).skip(skip).limit(limit),
-        ServiceProviderModel.find(searchQuery).skip(skip).limit(limit),
-      ]);
-      users = [...admins, ...customers, ...serviceProviders];
-      totalUsers = await Promise.all([
-        AdminModel.countDocuments(searchQuery),
-        CustomerModel.countDocuments(searchQuery),
-        ServiceProviderModel.countDocuments(searchQuery),
-      ]).then(([adminCount, customerCount, serviceProviderCount]) => adminCount + customerCount + serviceProviderCount);
+    if (role) {
+      query.role = role;
     }
 
-    res.status(200).json({ users, totalUsers, page: parseInt(page), limit: parseInt(limit) });
+    if (search) {
+      query.$or = [
+        { FullName: { $regex: search, $options: "i" } },
+        { Email: { $regex: search, $options: "i" } },
+        { PhoneNumber: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const users = await ServiceProviderModel.find(query);
+    res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error fetching users" });
   }
 };
 
-// Delete a user (service provider or customer)
-const deletUser = async (req, res) => {
+// Delete user
+export const deletUser = async (req, res) => {
   try {
-    const userId = req.params.id;
-
-    // Check if the user is an admin
-    const admin = await AdminModel.findById(userId);
-    if (admin) {
-      return res.status(409).json({ message: "Admin cannot delete own account" });
+    const { id } = req.params;
+    const deletedUser = await ServiceProviderModel.findByIdAndDelete(id);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
     }
-
-    // Check if the user is a customer
-    const customer = await CustomerModel.findByIdAndDelete(userId);
-    if (customer) {
-      return res.status(200).json({ message: "Customer Deleted Successfully", user: customer });
-    }
-
-    // Check if the user is a service provider
-    const serviceProvider = await ServiceProviderModel.findByIdAndDelete(userId);
-    if (serviceProvider) {
-      return res.status(200).json({ message: "Service Provider Deleted Successfully", user: serviceProvider });
-    }
-
-    // If no user is found
-    res.status(404).json({ message: "User Not Found" });
+    res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Error deleting user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error deleting user" });
   }
 };
 
-// Get user counts (customers and service providers)
-const GetUserCounts = async (req, res) => {
+// Get user counts
+export const GetUserCounts = async (req, res) => {
   try {
-    const [customerCount, serviceProviderCount] = await Promise.all([
-      CustomerModel.countDocuments({}),
-      ServiceProviderModel.countDocuments({}),
-    ]);
-    res.status(200).json({ customerCount, serviceProviderCount });
+    const customerCount = await CustomerModel.countDocuments();
+    const serviceProviderCount = await ServiceProviderModel.countDocuments();
+    res.json({ customerCount, serviceProviderCount });
   } catch (error) {
     console.error("Error fetching user counts:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error fetching user counts" });
   }
 };
 
-// Fetch a single customer by ID
-const getCustomerById = async (req, res) => {
+// Get customer by ID
+export const getCustomerById = async (req, res) => {
   try {
-    const customer = await CustomerModel.findById(req.params.id);
+    const { id } = req.params;
+    const customer = await CustomerModel.findById(id);
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
-    res.status(200).json({ customer });
+    res.json({ customer });
   } catch (error) {
     console.error("Error fetching customer:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error fetching customer" });
   }
 };
 
-// Fetch a single service provider by ID
-const getServiceProviderById = async (req, res) => {
+// Get service provider by ID
+export const getServiceProviderById = async (req, res) => {
   try {
-    const serviceProvider = await ServiceProviderModel.findById(req.params.id);
-    if (!serviceProvider) {
-      return res.status(404).json({ message: "Service Provider not found" });
+    const { id } = req.params;
+    const provider = await ServiceProviderModel.findById(id);
+    if (!provider) {
+      return res.status(404).json({ message: "Service provider not found" });
     }
-    res.status(200).json({ serviceProvider });
+    res.json({ provider });
   } catch (error) {
     console.error("Error fetching service provider:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Error fetching service provider" });
   }
 };
 
-// Export all functions
-export { Getuser, deletUser, GetUserCounts, getCustomerById, getServiceProviderById };
+// Update a service provider by ID
+export const updateServiceProvider = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Find the service provider
+    const provider = await ServiceProviderModel.findById(id);
+    if (!provider) {
+      return res.status(404).json({ message: "Service provider not found" });
+    }
+
+    // Update the provider's details
+    Object.keys(updates).forEach((key) => {
+      if (key !== "password") {
+        // Don't update password through this endpoint
+        provider[key] = updates[key];
+      }
+    });
+
+    // Save the updated provider
+    const updatedProvider = await provider.save();
+
+    res.json({
+      message: "Service provider updated successfully",
+      provider: updatedProvider,
+    });
+  } catch (error) {
+    console.error("Error updating service provider:", error);
+    res
+      .status(500)
+      .json({ message: "Error updating service provider", error: error.message });
+  }
+};

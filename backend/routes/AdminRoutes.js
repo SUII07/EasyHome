@@ -1,5 +1,5 @@
 import express from 'express';
-import { Getuser, deletUser, GetUserCounts, getCustomerById, getServiceProviderById } from '../controllers/Admin.js';
+import { Getuser, deletUser, GetUserCounts, getCustomerById, getServiceProviderById, updateServiceProvider } from '../controllers/Admin.js';
 import { isAdmin } from '../middleware/verifyToken.js';
 
 const AdminRoutes = express.Router();
@@ -17,5 +17,6 @@ AdminRoutes.get('/getusercounts', isAdmin, GetUserCounts);
 // New routes for fetching individual user details
 AdminRoutes.get('/customers/:id', isAdmin, getCustomerById);
 AdminRoutes.get('/serviceproviders/:id', isAdmin, getServiceProviderById);
+AdminRoutes.put('/serviceproviders/:id', isAdmin, updateServiceProvider);
 
 export default AdminRoutes;

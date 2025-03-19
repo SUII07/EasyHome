@@ -1,3 +1,4 @@
+// App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -10,6 +11,7 @@ import Booking from "./Booking";
 import ServiceProvider from "./ServiceProvider"; 
 import CustomerDetail from "./CustomerDetail"; 
 import ServiceProviderDetail from "./ServiceProviderDetail"; 
+import ProviderList from "./ProviderList"; // Add this line
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
         <Route path="/serviceprovider" element={<ServiceProvider />} /> 
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/Booking" element={<Booking />} />
+        <Route path="/providers" element={<ProviderList />} /> {/* Add this line */}
         <Route path="/admin/customers/:id" element={<CustomerDetail />} /> 
         <Route path="/admin/serviceproviders/:id" element={<ServiceProviderDetail />} /> 
         <Route path="/" element={<Login />} />

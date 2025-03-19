@@ -7,9 +7,9 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
-    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role } = req.body;
+    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role, serviceType } = req.body; // Add serviceType here
 
-    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role });
+    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role, serviceType });
 
     if (!FullName || !PhoneNumber || !ZipCode || !Email || !password || !ConfirmPassword) {
       console.log("Missing required fields");
@@ -59,6 +59,12 @@ const register = async (req, res) => {
           role: "customer",
         });
       } else if (role === "serviceprovider") {
+        // Ensure serviceType is provided for service providers
+        if (!serviceType) {
+          console.log("Service type is required for service providers");
+          return res.status(400).json({ success: false, message: "Service type is required for service providers" });
+        }
+
         newUser = new ServiceProviderModel({
           FullName,
           PhoneNumber,
@@ -66,6 +72,7 @@ const register = async (req, res) => {
           Email,
           password: await bcryptjs.hash(password, 10),
           role: "serviceprovider",
+          serviceType, // Add serviceType here
         });
       }
     }
@@ -116,9 +123,7 @@ const Login = async (req, res) => {
     res.status(200).json({ success: true, message: "Login successful", user: { _id: user._id, role: user.role } });
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).json({ success: false, message: "Internal server error" }
-      
-    );
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
