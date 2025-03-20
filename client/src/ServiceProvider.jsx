@@ -8,39 +8,62 @@ const ServiceProvider = () => {
   const navigate = useNavigate();
   const [provider, setProvider] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [notifications, setNotifications] = useState(3);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
 
   useEffect(() => {
+    // Check if user is authenticated and is a service provider
+    if (!user || user.role !== "serviceprovider") {
+      toast.error("Access denied. Please login as a service provider.");
+      navigate("/login");
+      return;
+    }
+
     fetchProviderDetails();
-  }, []);
+  }, [navigate, user]);
 
   const fetchProviderDetails = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/serviceprovider/profile", {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch("http://localhost:4000/api/serviceProvider/profile", {
         credentials: "include",
       });
+      
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+      
       const data = await response.json();
-      setProvider(data.provider);
-      setIsLoading(false);
+      if (data.success && data.provider) {
+        setProvider(data.provider);
+      } else {
+        throw new Error(data.message || "Provider data not found");
+      }
     } catch (error) {
       console.error("Error fetching provider details:", error);
+      setError(error.message);
       toast.error("Failed to fetch profile details. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:4000/api/auth/logout", {
+      const response = await fetch("http://localhost:4000/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
-      toast.success("Logged out successfully");
-      navigate("/login");
+      
+      if (response.ok) {
+        toast.success("Logged out successfully");
+        navigate("/login");
+      } else {
+        throw new Error("Logout failed");
+      }
     } catch (error) {
       console.error("Error logging out:", error);
       toast.error("Failed to logout. Please try again.");
@@ -56,7 +79,7 @@ const ServiceProvider = () => {
           </div>
           <div className="stat-info">
             <h3>Total Bookings</h3>
-            <p className="stat-value">24</p>
+            <p className="stat-value">{provider?.bookings?.length || 0}</p>
             <span className="stat-trend positive">+12% this month</span>
           </div>
         </div>
@@ -67,7 +90,10 @@ const ServiceProvider = () => {
           </div>
           <div className="stat-info">
             <h3>Rating</h3>
-            <p className="stat-value">4.8</p>
+            <p className="stat-value">
+              <FaStar className="star-icon" />
+              {provider?.rating || 'N/A'}
+            </p>
             <span className="stat-trend positive">+0.2 this month</span>
           </div>
         </div>
@@ -185,9 +211,20 @@ const ServiceProvider = () => {
 
   if (isLoading) {
     return (
-      <div className="service-provider-container">
+      <div className="loading-container">
         <div className="loading-spinner"></div>
         <p>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <p className="error-message">{error}</p>
+        <button onClick={fetchProviderDetails} className="retry-button">
+          Retry
+        </button>
       </div>
     );
   }

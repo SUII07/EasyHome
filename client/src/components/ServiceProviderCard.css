@@ -1,0 +1,143 @@
+.provider-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 15px;
+  transition: transform 0.2s ease;
+  width: 300px;
+}
+
+.provider-card:hover {
+  transform: translateY(-5px);
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.provider-icon {
+  font-size: 24px;
+  color: #4a90e2;
+  margin-right: 10px;
+}
+
+.provider-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.provider-details {
+  margin-bottom: 20px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.detail-icon {
+  margin-right: 10px;
+  color: #4a90e2;
+}
+
+.provider-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.book-button, .cancel-button {
+  flex: 1;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.book-button {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.book-button:hover {
+  background-color: #357abd;
+}
+
+.cancel-button {
+  background-color: #e2e2e2;
+  color: #666;
+}
+
+.cancel-button:hover {
+  background-color: #d1d1d1;
+}
+
+.status-icon {
+  font-size: 1.25rem;
+}
+
+.status-icon.approved {
+  color: #28a745;
+}
+
+.status-icon.pending {
+  color: #ffc107;
+}
+
+.service-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.service-type {
+  color: #4a90e2;
+  font-weight: 500;
+  margin: 0;
+}
+
+.price {
+  color: #28a745;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.details-button {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.details-button:hover {
+  background-color: #e9ecef;
+}
+
+@media (max-width: 480px) {
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .book-button,
+  .details-button {
+    width: 100%;
+  }
+} 

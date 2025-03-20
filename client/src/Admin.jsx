@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit } from "react-icons/fa";
+import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import "./Admin.css";
 import axios from "axios";
@@ -16,8 +16,19 @@ const Admin = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [adminName, setAdminName] = useState(""); // State to store admin's name
+  const [pendingProviders, setPendingProviders] = useState([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Fetch admin's name from localStorage on component mount
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user && user.role === "admin") {
+      setAdminName(user.FullName);
+    }
+  }, []);
 
   useEffect(() => {
     fetchUserCounts();
@@ -33,6 +44,10 @@ const Admin = () => {
       setUsers([]);
     }
   }, [location.pathname, search]);
+
+  useEffect(() => {
+    fetchPendingProviders();
+  }, []);
 
   const fetchUsers = async (role, search) => {
     setIsLoading(true);
@@ -73,6 +88,21 @@ const Admin = () => {
     }
   };
 
+  const fetchPendingProviders = async () => {
+    try {
+      setIsLoadingProviders(true);
+      const response = await axios.get("http://localhost:4000/api/admin/pending-providers", {
+        withCredentials: true
+      });
+      setPendingProviders(response.data.providers);
+    } catch (error) {
+      console.error("Error fetching pending providers:", error);
+      toast.error("Failed to fetch pending providers");
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  };
+
   const handleEdit = (userId, role) => {
     if (role === "customer") {
       navigate(`/admin/customers/${userId}`);
@@ -88,17 +118,18 @@ const Admin = () => {
 
     try {
       const response = await axios.delete(
-        `http://localhost:4000/api/admin/${role}s/${userId}`,
+        `http://localhost:4000/api/admin/delete/${userId}`,
         { withCredentials: true }
       );
 
       if (response.status === 200) {
         toast.success(`${role} deleted successfully`);
-        fetchUsers();
+        fetchUsers(role, search);
+        fetchUserCounts();
       }
     } catch (error) {
-      console.error(`Error deleting ${role}:`, error);
-      toast.error(error.response?.data?.message || `Failed to delete ${role}`);
+      console.error("Error deleting user:", error);
+      toast.error(error.response?.data?.message || "Failed to delete user");
     }
   };
 
@@ -108,6 +139,7 @@ const Admin = () => {
         method: "POST",
         credentials: "include",
       });
+      localStorage.removeItem("user"); 
       toast.success("Logged out successfully");
       navigate("/login");
     } catch (error) {
@@ -122,12 +154,10 @@ const Admin = () => {
 
   const handleFilterChange = (e) => {
     setFilterStatus(e.target.value);
-    setPage(1);
   };
 
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
-    setPage(1);
   };
 
   const handlePageChange = (newPage) => {
@@ -178,6 +208,99 @@ const Admin = () => {
         return "Service Provider Management";
       default:
         return "Admin Dashboard";
+    }
+  };
+
+  const renderUserList = () => {
+    if (isLoading) {
+      return (
+        <tr>
+          <td colSpan={6} className="loading-cell">
+            Loading...
+          </td>
+        </tr>
+      );
+    }
+
+    if (!users.length) {
+      return (
+        <tr>
+          <td colSpan={6} className="no-data">
+            No {location.pathname === "/admin/customers" ? "customers" : "service providers"} found.
+          </td>
+        </tr>
+      );
+    }
+
+    return users.map((user) => (
+      <tr key={user._id}>
+        <td>
+          <div className="user-info">
+            <FaUserCircle className="user-icon" />
+            <div>
+              <p className="user-name">{user.FullName}</p>
+              <p className="user-email">{user.Email}</p>
+              <p className="user-role">{user.role === 'serviceprovider' ? 'Service Provider' : 'Customer'}</p>
+            </div>
+          </div>
+        </td>
+        <td>{user.PhoneNumber}</td>
+        <td>{user.ZipCode}</td>
+        <td>
+          <span className={`status ${user.verificationStatus?.toLowerCase() || 'active'}`}>
+            {user.verificationStatus || 'Active'}
+          </span>
+        </td>
+        <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+        <td>
+          <div className="action-buttons">
+            <button 
+              onClick={() => handleEdit(user._id, location.pathname.includes("customers") ? "customer" : "serviceprovider")}
+              className="edit-button"
+              title="Edit User"
+            >
+              <FaEdit />
+            </button>
+            <button 
+              onClick={() => handleDelete(user._id, location.pathname.includes("customers") ? "customer" : "serviceprovider")}
+              className="delete-button"
+              title="Delete User"
+            >
+              <FaTrash />
+            </button>
+          </div>
+        </td>
+      </tr>
+    ));
+  };
+
+  const handleApproveProvider = async (providerId) => {
+    try {
+      await axios.patch(
+        `http://localhost:4000/api/admin/approve-provider/${providerId}`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Service provider approved successfully");
+      fetchPendingProviders();
+    } catch (error) {
+      console.error("Error approving provider:", error);
+      toast.error("Failed to approve provider");
+    }
+  };
+
+  const handleRejectProvider = async (providerId) => {
+    try {
+      await axios.patch(
+        `http://localhost:4000/api/admin/reject-provider/${providerId}`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Service provider rejected successfully");
+      fetchPendingProviders();
+    } catch (error) {
+      console.error("Error rejecting provider:", error);
+      toast.error("Failed to reject provider");
     }
   };
 
@@ -281,6 +404,46 @@ const Admin = () => {
           </section>
         )}
 
+        {location.pathname === "/admin" && (
+          <section className="pending-providers-section">
+            <h2>Pending Service Provider Requests</h2>
+            {isLoadingProviders ? (
+              <div className="loading">Loading pending providers...</div>
+            ) : pendingProviders.length > 0 ? (
+              <div className="pending-providers-grid">
+                {pendingProviders.map((provider) => (
+                  <div key={provider._id} className="pending-provider-card">
+                    <div className="provider-info">
+                      <h3>{provider.FullName}</h3>
+                      <p>Service Type: {provider.serviceType}</p>
+                      <p>Email: {provider.Email}</p>
+                      <p>Phone: {provider.PhoneNumber}</p>
+                      <p>Price: ${provider.price}</p>
+                      <p>Requested: {new Date(provider.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="provider-actions">
+                      <button
+                        className="approve-button"
+                        onClick={() => handleApproveProvider(provider._id)}
+                      >
+                        <FaCheck /> Approve
+                      </button>
+                      <button
+                        className="reject-button"
+                        onClick={() => handleRejectProvider(provider._id)}
+                      >
+                        <FaTimes /> Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="no-data">No pending service provider requests</p>
+            )}
+          </section>
+        )}
+
         {(location.pathname === "/admin/customers" || location.pathname === "/admin/serviceproviders") && (
           <section className="user-list">
             <div className="list-header">
@@ -313,7 +476,7 @@ const Admin = () => {
                 <thead>
                   <tr>
                     <th>User</th>
-                    <th>Contact</th>
+                    <th>Phone Number</th>
                     <th>Location</th>
                     <th>Status</th>
                     <th>Joined</th>
@@ -321,72 +484,7 @@ const Admin = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={6} className="loading-row">
-                        <div className="loading-spinner"></div>
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : getFilteredUsers().length > 0 ? (
-                    getFilteredUsers().map((user) => (
-                      <tr key={user._id}>
-                        <td>
-                          <div className="user-info">
-                            <FaUserCircle className="user-avatar" />
-                            <div>
-                              <div className="user-name">{user.FullName}</div>
-                              <div className="user-email">{user.Email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="contact-info">
-                            <div className="phone">{user.PhoneNumber}</div>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="location-info">
-                            <div className="zip-code">{user.ZipCode}</div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`status-badge ${user.status || 'active'}`}>
-                            {user.status || 'Active'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="date-info">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            <button 
-                              onClick={() => handleEdit(user._id, location.pathname.includes("customers") ? "customer" : "serviceprovider")}
-                              className="edit-button"
-                              title="Edit User"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(user._id, location.pathname.includes("customers") ? "customer" : "serviceprovider")}
-                              className="delete-button"
-                              title="Delete User"
-                            >
-                              <FaTrash />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="no-data">
-                        No {location.pathname === "/admin/customers" ? "customers" : "service providers"} found.
-                      </td>
-                    </tr>
-                  )}
+                  {renderUserList()}
                 </tbody>
               </table>
             </div>

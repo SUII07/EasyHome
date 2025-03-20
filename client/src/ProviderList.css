@@ -1,0 +1,218 @@
+.provider-list-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.provider-list-container h2 {
+  color: #003864;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+.provider-list-container > p {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.providers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.provider-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.provider-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.provider-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.provider-photo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 1rem;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.provider-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-photo {
+  font-size: 2rem;
+  color: #999;
+}
+
+.provider-info h3 {
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.star-filled {
+  color: #ffd700;
+}
+
+.star-empty {
+  color: #ddd;
+}
+
+.rating span {
+  margin-left: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.provider-details {
+  margin: 1rem 0;
+  padding: 1rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.provider-details p {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  color: #666;
+}
+
+.view-certificate {
+  margin-left: 0.5rem;
+  color: #003864;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+}
+
+.price-section {
+  margin: 1rem 0;
+}
+
+.price-section h4 {
+  color: #003864;
+  margin-bottom: 0.5rem;
+}
+
+.negotiation-form {
+  margin-top: 1rem;
+}
+
+.negotiation-form input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.negotiation-form small {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.action-buttons button {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.view-details-btn {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.view-details-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.negotiate-btn {
+  background-color: #fff;
+  color: #003864;
+  border: 1px solid #003864 !important;
+}
+
+.negotiate-btn:hover {
+  background-color: #f0f7ff;
+}
+
+.book-btn {
+  background-color: #003864;
+  color: white;
+}
+
+.book-btn:hover {
+  background-color: #002d4e;
+}
+
+.back-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.back-btn:hover {
+  background-color: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .providers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-card {
+    padding: 1rem;
+  }
+
+  .provider-photo {
+    width: 60px;
+    height: 60px;
+  }
+} 

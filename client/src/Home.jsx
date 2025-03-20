@@ -6,6 +6,7 @@ import { FaTools, FaPaintRoller, FaWater, FaThermometerHalf, FaHouseUser, FaExcl
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))); 
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,8 +40,8 @@ const Home = () => {
     },
     {
       icon: <FaTools className="service-icon" />,
-      title: "Repairs & Maintenance",
-      description: "Expert repair services for all house systems",
+      title: "Electrician",
+      description: "Expert electrical repair and installation services",
       link: "/Booking",
       buttonClass: "btn-primary",
       buttonText: "Request Service"
@@ -101,7 +102,7 @@ const Home = () => {
         <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
           <li><Link to="/home" onClick={() => setIsMenuOpen(false)}>Home</Link></li> 
           <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
-          <li><Link to="/services" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
+          <li><Link to="/user/serviceproviders" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
           <li><Link to="/login" onClick={() => setIsMenuOpen(false)}>Sign In</Link></li>
         </ul>
       </nav>

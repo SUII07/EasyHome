@@ -7,9 +7,9 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
-    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role, serviceType } = req.body; // Add serviceType here
+    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role, serviceType, price } = req.body;
 
-    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role, serviceType });
+    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role, serviceType, price });
 
     if (!FullName || !PhoneNumber || !ZipCode || !Email || !password || !ConfirmPassword) {
       console.log("Missing required fields");
@@ -59,10 +59,36 @@ const register = async (req, res) => {
           role: "customer",
         });
       } else if (role === "serviceprovider") {
-        // Ensure serviceType is provided for service providers
-        if (!serviceType) {
-          console.log("Service type is required for service providers");
-          return res.status(400).json({ success: false, message: "Service type is required for service providers" });
+        // Ensure serviceType and price are provided for service providers
+        if (!serviceType || !price) {
+          console.log("Service type and price are required for service providers");
+          return res.status(400).json({ 
+            success: false, 
+            message: "Service type and price are required for service providers" 
+          });
+        }
+
+        // Convert serviceType to lowercase for consistency
+        const normalizedServiceType = serviceType.toLowerCase();
+
+        // Validate service type against allowed values
+        const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services"];
+        if (!validServiceTypes.includes(normalizedServiceType)) {
+          console.log("Invalid service type:", serviceType);
+          return res.status(400).json({
+            success: false,
+            message: "Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services"
+          });
+        }
+
+        // Validate price
+        const numericPrice = parseFloat(price);
+        if (isNaN(numericPrice) || numericPrice <= 0) {
+          console.log("Invalid price:", price);
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a valid price greater than 0"
+          });
         }
 
         newUser = new ServiceProviderModel({
@@ -72,7 +98,14 @@ const register = async (req, res) => {
           Email,
           password: await bcryptjs.hash(password, 10),
           role: "serviceprovider",
-          serviceType, // Add serviceType here
+          serviceType: normalizedServiceType,
+          price: numericPrice,
+          verificationStatus: "pending",
+          isVerified: false,
+          rating: 0,
+          totalReviews: 0,
+          experience: 0,
+          availability: true
         });
       }
     }
@@ -83,7 +116,14 @@ const register = async (req, res) => {
     res.status(201).json({ success: true, message: "User registered successfully", role });
   } catch (error) {
     console.error("Error during registration:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Validation error", 
+        errors: Object.values(error.errors).map(err => err.message)
+      });
+    }
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
 
@@ -96,7 +136,7 @@ const Login = async (req, res) => {
     const customer = await CustomerModel.findOne({ Email });
     const serviceProvider = await ServiceProviderModel.findOne({ Email });
 
-    const user = admin || customer || serviceProvider;
+    let user = admin || customer || serviceProvider;
 
     if (!user) {
       return res.status(404).json({ success: false, message: "Invalid credentials" });
@@ -107,20 +147,63 @@ const Login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // Include role in the token payload
+    // Set role based on which model found the user
+    if (admin) {
+      user.role = "admin";
+    } else if (customer) {
+      user.role = "customer";
+    } else if (serviceProvider) {
+      user.role = "serviceprovider";
+    }
+
+    // Special handling for service providers
+    if (user.role === "serviceprovider") {
+      if (user.verificationStatus === "pending") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account is pending admin approval. Please wait for verification."
+        });
+      }
+      if (user.verificationStatus === "rejected") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account has been rejected. Please contact support for more information."
+        });
+      }
+    }
+
+    // Include role, verification status, and other relevant info in the token payload
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { 
+        userId: user._id, 
+        role: user.role, 
+        FullName: user.FullName,
+        verificationStatus: user.verificationStatus || 'approved'
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    
+
     res.cookie("token", token, {
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: process.env.NODE_ENV === "production", // Ensures cookies are sent over HTTPS in production
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 3600000, // 1 hour
     });
-    
-    res.status(200).json({ success: true, message: "Login successful", user: { _id: user._id, role: user.role } });
+
+    const responseData = {
+      success: true,
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        role: user.role,
+        FullName: user.FullName,
+        verificationStatus: user.verificationStatus || 'approved',
+        Email: user.Email
+      }
+    };
+
+    console.log("Login response sent:", responseData);
+    res.status(200).json(responseData);
   } catch (error) {
     console.error("Error during login:", error);
     res.status(500).json({ success: false, message: "Internal server error" });

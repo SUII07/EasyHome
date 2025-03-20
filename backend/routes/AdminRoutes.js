@@ -1,6 +1,14 @@
 import express from 'express';
-import { Getuser, deletUser, GetUserCounts, getCustomerById, getServiceProviderById, updateServiceProvider } from '../controllers/Admin.js';
+import { Getuser, GetUserCounts, getCustomerById, getServiceProviderById, updateServiceProvider, updateCustomer } from '../controllers/Admin.js';
 import { isAdmin } from '../middleware/verifyToken.js';
+import {
+  getPendingProviders,
+  approveProvider,
+  rejectProvider,
+  deleteUser,
+  deleteServiceProvider
+} from "../controllers/AdminController.js";
+import { verifyToken } from "../middleware/auth.js";
 
 const AdminRoutes = express.Router();
 
@@ -11,12 +19,25 @@ AdminRoutes.get('/test', isAdmin, (req, res) => {
 
 // Existing routes
 AdminRoutes.get('/getuser', isAdmin, Getuser);
-AdminRoutes.delete('/delete/:id', isAdmin, deletUser);
 AdminRoutes.get('/getusercounts', isAdmin, GetUserCounts);
 
 // New routes for fetching individual user details
 AdminRoutes.get('/customers/:id', isAdmin, getCustomerById);
+AdminRoutes.put('/customers/:id', isAdmin, updateCustomer);
 AdminRoutes.get('/serviceproviders/:id', isAdmin, getServiceProviderById);
 AdminRoutes.put('/serviceproviders/:id', isAdmin, updateServiceProvider);
+AdminRoutes.delete('/serviceproviders/:id', isAdmin, deleteServiceProvider);
+
+// Get pending service provider requests
+AdminRoutes.get("/pending-providers", verifyToken, getPendingProviders);
+
+// Approve service provider
+AdminRoutes.patch("/approve-provider/:providerId", verifyToken, approveProvider);
+
+// Reject service provider
+AdminRoutes.patch("/reject-provider/:providerId", verifyToken, rejectProvider);
+
+// Delete user (consolidated route)
+AdminRoutes.delete("/delete/:userId", isAdmin, deleteUser);
 
 export default AdminRoutes;

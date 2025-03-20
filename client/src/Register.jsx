@@ -14,6 +14,7 @@ const Register = () => {
   const [ConfirmPassword, setConfirmPassword] = useState("");
   const [Role, setRole] = useState("customer");
   const [ServiceType, setServiceType] = useState("");
+  const [Price, setPrice] = useState("");
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -47,6 +48,7 @@ const Register = () => {
         ConfirmPassword,
         role: Role,
         serviceType: Role === "serviceprovider" ? ServiceType : undefined,
+        price: Role === "serviceprovider" ? parseFloat(Price) : undefined,
       });
 
       toast.success(request.data.message || "Registration successful!");
@@ -200,28 +202,44 @@ const Register = () => {
               </div>
 
               {Role === "serviceprovider" && (
-                <div className="input-group">
-                  <label htmlFor="serviceType" className="input-label">
-                    <FaUserTie className="input-icon" /> Service Type
-                  </label>
-                  <select
-                    id="serviceType"
-                    className="input-field"
-                    value={ServiceType}
-                    onChange={(e) => setServiceType(e.target.value)}
-                    required
-                  >
-                    <option value="">Select a service type</option>
-                    <option value="plumbing">Plumbing</option>
-                    <option value="electrical">Electrical</option>
-                    <option value="carpentry">Carpentry</option>
-                    <option value="painting">Painting</option>
-                    <option value="cleaning">Cleaning</option>
-                    <option value="appliance">Appliance Repair</option>
-                    <option value="hvac">HVAC</option>
-                    <option value="landscaping">Landscaping</option>
-                  </select>
-                </div>
+                <>
+                  <div className="input-group">
+                    <label htmlFor="serviceType" className="input-label">
+                      <FaUserTie className="input-icon" /> Service Type
+                    </label>
+                    <select
+                      id="serviceType"
+                      className="input-field"
+                      value={ServiceType}
+                      onChange={(e) => setServiceType(e.target.value)}
+                      required
+                    >
+                      <option value="">Select a service type</option>
+                      <option value="house cleaning">House Cleaning</option>
+                      <option value="electrician">Electrician</option>
+                      <option value="painting">Painting</option>
+                      <option value="plumbing">Plumbing</option>
+                      <option value="hvac services">HVAC Services</option>
+                    </select>
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="price" className="input-label">
+                      <FaUserTie className="input-icon" /> Service Price (per hour)
+                    </label>
+                    <input
+                      id="price"
+                      type="number"
+                      placeholder="Enter service price"
+                      className="input-field"
+                      value={Price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      required
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </>
               )}
             </>
           )}

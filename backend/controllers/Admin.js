@@ -8,10 +8,6 @@ export const Getuser = async (req, res) => {
     const { role, search } = req.query;
     let query = {};
 
-    if (role) {
-      query.role = role;
-    }
-
     if (search) {
       query.$or = [
         { FullName: { $regex: search, $options: "i" } },
@@ -20,7 +16,20 @@ export const Getuser = async (req, res) => {
       ];
     }
 
-    const users = await ServiceProviderModel.find(query);
+    let users;
+    if (role === "customer") {
+      users = await CustomerModel.find(query);
+    } else if (role === "serviceprovider") {
+      users = await ServiceProviderModel.find(query);
+    } else {
+      // If no role specified, fetch both customers and service providers
+      const [customers, serviceProviders] = await Promise.all([
+        CustomerModel.find(query),
+        ServiceProviderModel.find(query)
+      ]);
+      users = [...customers, ...serviceProviders];
+    }
+
     res.json({ users });
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -117,5 +126,40 @@ export const updateServiceProvider = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error updating service provider", error: error.message });
+  }
+};
+
+// Update a customer by ID
+export const updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Find the customer
+    const customer = await CustomerModel.findById(id);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // Update the customer's details
+    Object.keys(updates).forEach((key) => {
+      if (key !== "password") {
+        // Don't update password through this endpoint
+        customer[key] = updates[key];
+      }
+    });
+
+    // Save the updated customer
+    const updatedCustomer = await customer.save();
+
+    res.json({
+      message: "Customer updated successfully",
+      customer: updatedCustomer,
+    });
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    res
+      .status(500)
+      .json({ message: "Error updating customer", error: error.message });
   }
 };

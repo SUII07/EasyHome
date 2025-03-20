@@ -281,9 +281,22 @@ const ServiceProviderDetail = () => {
               <FaCheckCircle className="detail-icon" />
               <div className="detail-content">
                 <label>Verification Status</label>
-                <span className={`status-badge ${provider.isVerified ? "verified" : "pending"}`}>
-                  {provider.isVerified ? "Verified" : "Pending"}
-                </span>
+                {isEditing ? (
+                  <select
+                    name="status"
+                    value={editedProvider.verificationStatus || ""}
+                    onChange={handleChange}
+                    className="edit-input"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                ) : (
+                  <p className={`status ${provider.verificationStatus?.toLowerCase() || 'pending'}`}>
+                    {provider.verificationStatus === 'approved' ? 'Approved' : provider.verificationStatus || 'Pending'}
+                  </p>
+                )}
               </div>
             </div>
           </div>

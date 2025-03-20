@@ -9,38 +9,78 @@ export default function Login() {
   const [Email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-  
+
     try {
+      console.log("Attempting login with:", { Email, password: "***" });
       const response = await axios.post(
         "http://localhost:4000/api/auth/login",
         { Email, password },
         { withCredentials: true }
       );
-  
-      if (response.status === 200) {
-        toast.success(response.data.message || "Login successful!");
-  
-        const user = response.data.user;
-  
-        if (user.role === "admin") {
-          navigate("/admin");
-        } else if (user.role === "serviceprovider") {
-          navigate("/serviceprovider");
-        } else {
-          navigate("/home");
+
+      console.log("Login response:", response.data);
+
+      if (response.data.success) {
+        const { role, verificationStatus } = response.data.user;
+        console.log("Login successful - User role:", role);
+        console.log("Login successful - Verification status:", verificationStatus);
+        console.log("Full user data:", response.data.user);
+
+        // Store user details in localStorage
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+
+        // Handle redirection based on role and verification status
+        if (!role) {
+          console.error("No role found in user data");
+          setError("Invalid user data received");
+          toast.error("Login failed: Invalid user data");
+          return;
+        }
+
+        const userRole = role.toLowerCase();
+        switch (userRole) {
+          case "admin":
+            navigate("/admin");
+            toast.success("Welcome Admin!");
+            break;
+          
+          case "serviceprovider":
+            if (verificationStatus === "approved") {
+              navigate("/serviceprovider");
+              toast.success("Welcome to your service provider dashboard!");
+            } else if (verificationStatus === "pending") {
+              setError("Your account is pending admin approval. Please wait for verification.");
+              toast.error("Your account is pending admin approval. Please wait for verification.");
+              localStorage.removeItem("user");
+            } else if (verificationStatus === "rejected") {
+              setError("Your account has been rejected. Please contact support.");
+              toast.error("Your account has been rejected. Please contact support.");
+              localStorage.removeItem("user");
+            }
+            break;
+          
+          case "customer":
+            navigate("/home");
+            toast.success("Welcome!");
+            break;
+          
+          default:
+            console.log("Unknown role:", role);
+            navigate("/home");
+            toast.success("Welcome!");
+            break;
         }
       }
     } catch (error) {
       console.error(error);
-  
       if (error.response) {
         setError(error.response.data.message || "Login failed. Please check your credentials.");
         toast.error(error.response.data.message || "Login failed. Please check your credentials.");
