@@ -19,17 +19,10 @@ export default function Login() {
     setError("");
 
     try {
-<<<<<<< HEAD
       console.log("Attempting login with:", { email, password: "***" });
       const response = await axios.post(
         "http://localhost:4000/api/auth/login",
         { email, password },
-=======
-      console.log("Attempting login with:", { Email, password: "***" });
-      const response = await axios.post(
-        "http://localhost:4000/api/auth/login",
-        { Email, password },
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
         { withCredentials: true }
       );
 
@@ -120,11 +113,7 @@ export default function Login() {
               type="email"
               placeholder="Enter your email"
               className="input-field"
-<<<<<<< HEAD
               value={email}
-=======
-              value={Email}
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
               onChange={(e) => setEmail(e.target.value)}
               required
             />

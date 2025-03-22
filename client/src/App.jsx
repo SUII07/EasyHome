@@ -13,10 +13,7 @@ import CustomerDetail from "./CustomerDetail";
 import ServiceProviderDetail from "./ServiceProviderDetail"; 
 import ServiceProviderCard from "./components/ServiceProviderCard";
 import ProviderList from "./ProviderList";
-<<<<<<< HEAD
 import CustomerProfile from './CustomerProfile';
-=======
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
 function App() {
   return (
@@ -42,10 +39,7 @@ function App() {
         <Route path="/admin/customers/:id" element={<CustomerDetail />} />
         <Route path="/admin/serviceproviders/:id" element={<ServiceProviderDetail />} />
         <Route path="/user/serviceproviders" element={<ServiceProviderCard />} />
-<<<<<<< HEAD
         <Route path="/profile" element={<CustomerProfile />} />
-=======
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
       </Routes>
     </BrowserRouter>
   );

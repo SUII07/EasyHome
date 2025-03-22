@@ -35,7 +35,6 @@ const Register = () => {
     if (Password !== ConfirmPassword) {
       toast.error("Passwords do not match!");
       setIsLoading(false);
-<<<<<<< HEAD
       return;
     }
 
@@ -60,13 +59,10 @@ const Register = () => {
     if (Role === "serviceprovider" && (!ServiceType || !Price)) {
       toast.error("Please fill in all service provider details!");
       setIsLoading(false);
-=======
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
       return;
     }
 
     try {
-<<<<<<< HEAD
       // Validate service type before sending
       const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services"];
       if (Role === "serviceprovider" && !validServiceTypes.includes(ServiceType.toLowerCase())) {
@@ -74,19 +70,6 @@ const Register = () => {
         setIsLoading(false);
         return;
       }
-=======
-      const request = await axios.post("http://localhost:4000/api/auth/register", {
-        FullName,
-        PhoneNumber,
-        ZipCode,
-        Email,
-        password: Password,
-        ConfirmPassword,
-        role: Role,
-        serviceType: Role === "serviceprovider" ? ServiceType : undefined,
-        price: Role === "serviceprovider" ? parseFloat(Price) : undefined,
-      });
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
       // Validate price before sending
       if (Role === "serviceprovider" && (isNaN(Price) || parseFloat(Price) <= 0)) {

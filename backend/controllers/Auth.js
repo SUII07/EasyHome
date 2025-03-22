@@ -7,15 +7,9 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
-<<<<<<< HEAD
     const { fullName, phoneNumber, zipCode, email, password, confirmPassword, role, serviceType, price } = req.body;
 
     console.log("Received registration request:", { fullName, phoneNumber, zipCode, email, role, serviceType, price });
-=======
-    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role, serviceType, price } = req.body;
-
-    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role, serviceType, price });
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
     if (!fullName || !phoneNumber || !zipCode || !email || !password || !confirmPassword) {
       console.log("Missing required fields");
@@ -23,9 +17,9 @@ const register = async (req, res) => {
     }
 
     // Check if the email already exists in any of the role-specific collections
-    const existingAdmin = await AdminModel.findOne({ Email: email });
-    const existingCustomer = await CustomerModel.findOne({ Email: email });
-    const existingServiceProvider = await ServiceProviderModel.findOne({ Email: email });
+    const existingAdmin = await AdminModel.findOne({ email });
+    const existingCustomer = await CustomerModel.findOne({ email });
+    const existingServiceProvider = await ServiceProviderModel.findOne({ email });
 
     if (existingAdmin || existingCustomer || existingServiceProvider) {
       console.log("User already exists:", email);
@@ -41,10 +35,10 @@ const register = async (req, res) => {
 
     if (email.includes(".admin@")) {
       newUser = new AdminModel({
-        FullName: fullName,
-        PhoneNumber: phoneNumber,
-        ZipCode: zipCode,
-        Email: email,
+        fullName,
+        phoneNumber,
+        zipCode,
+        email,
         password: await bcryptjs.hash(password, 10),
         role: "admin",
       });
@@ -57,10 +51,10 @@ const register = async (req, res) => {
 
       if (role === "customer") {
         newUser = new CustomerModel({
-          FullName: fullName,
-          PhoneNumber: phoneNumber,
-          ZipCode: zipCode,
-          Email: email,
+          fullName,
+          phoneNumber,
+          zipCode,
+          email,
           password: await bcryptjs.hash(password, 10),
           role: "customer",
         });
@@ -98,10 +92,10 @@ const register = async (req, res) => {
         }
 
         newUser = new ServiceProviderModel({
-          fullName: fullName,
-          phoneNumber: phoneNumber,
-          zipCode: zipCode,
-          email: email,
+          fullName,
+          phoneNumber,
+          zipCode,
+          email,
           password: await bcryptjs.hash(password, 10),
           role: "serviceprovider",
           serviceType: normalizedServiceType,
@@ -183,11 +177,8 @@ const Login = async (req, res) => {
       { 
         userId: user._id, 
         role: user.role, 
-<<<<<<< HEAD
         fullName: user.fullName || user.FullName,
-=======
         FullName: user.FullName,
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
         verificationStatus: user.verificationStatus || 'approved'
       },
       process.env.JWT_SECRET,
@@ -206,15 +197,12 @@ const Login = async (req, res) => {
       user: {
         _id: user._id,
         role: user.role,
-<<<<<<< HEAD
         fullName: user.fullName || user.FullName,
         verificationStatus: user.verificationStatus || 'approved',
-        email: user.email || user.Email
-=======
+        email: user.email || user.Email,
         FullName: user.FullName,
         verificationStatus: user.verificationStatus || 'approved',
         Email: user.Email
->>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
       }
     };
 
