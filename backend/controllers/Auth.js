@@ -7,9 +7,15 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
+<<<<<<< HEAD
     const { fullName, phoneNumber, zipCode, email, password, confirmPassword, role, serviceType, price } = req.body;
 
     console.log("Received registration request:", { fullName, phoneNumber, zipCode, email, role, serviceType, price });
+=======
+    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role, serviceType, price } = req.body;
+
+    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role, serviceType, price });
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
     if (!fullName || !phoneNumber || !zipCode || !email || !password || !confirmPassword) {
       console.log("Missing required fields");
@@ -177,7 +183,11 @@ const Login = async (req, res) => {
       { 
         userId: user._id, 
         role: user.role, 
+<<<<<<< HEAD
         fullName: user.fullName || user.FullName,
+=======
+        FullName: user.FullName,
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
         verificationStatus: user.verificationStatus || 'approved'
       },
       process.env.JWT_SECRET,
@@ -196,9 +206,15 @@ const Login = async (req, res) => {
       user: {
         _id: user._id,
         role: user.role,
+<<<<<<< HEAD
         fullName: user.fullName || user.FullName,
         verificationStatus: user.verificationStatus || 'approved',
         email: user.email || user.Email
+=======
+        FullName: user.FullName,
+        verificationStatus: user.verificationStatus || 'approved',
+        Email: user.Email
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
       }
     };
 

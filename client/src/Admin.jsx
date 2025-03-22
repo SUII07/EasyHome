@@ -414,10 +414,17 @@ const Admin = () => {
                 {pendingProviders.map((provider) => (
                   <div key={provider._id} className="pending-provider-card">
                     <div className="provider-info">
+<<<<<<< HEAD
                       <h3>{provider.fullName}</h3>
                       <p>Service Type: {provider.serviceType}</p>
                       <p>Email: {provider.email}</p>
                       <p>Phone: {provider.phoneNumber}</p>
+=======
+                      <h3>{provider.FullName}</h3>
+                      <p>Service Type: {provider.serviceType}</p>
+                      <p>Email: {provider.Email}</p>
+                      <p>Phone: {provider.PhoneNumber}</p>
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
                       <p>Price: ${provider.price}</p>
                       <p>Requested: {new Date(provider.createdAt).toLocaleDateString()}</p>
                     </div>

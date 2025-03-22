@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "./Home.css";
+<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
 import { FaTools, FaPaintRoller, FaWater, FaThermometerHalf, FaHouseUser, FaExclamationTriangle, FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaBars, FaTimes, FaArrowRight, FaUserCircle } from "react-icons/fa";
 import { toast } from "react-hot-toast";
+=======
+import { Link } from "react-router-dom";
+import { FaTools, FaPaintRoller, FaWater, FaThermometerHalf, FaHouseUser, FaExclamationTriangle, FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaBars, FaTimes, FaArrowRight } from "react-icons/fa";
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+<<<<<<< HEAD
   const [isScrollingUp, setIsScrollingUp] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [user, setUser] = useState(null);
@@ -26,10 +32,18 @@ const Home = () => {
       setIsScrolled(currentScrollY > 50);
       setIsScrollingUp(currentScrollY < lastScrollY || currentScrollY <= 0);
       setLastScrollY(currentScrollY);
+=======
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user"))); 
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+<<<<<<< HEAD
   }, [lastScrollY]);
 
   const handleLogout = async () => {
@@ -52,6 +66,9 @@ const Home = () => {
       toast.error("Failed to logout. Please try again.");
     }
   };
+=======
+  }, []);
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -128,7 +145,11 @@ const Home = () => {
 
   return (
     <div className="home-container">
+<<<<<<< HEAD
       <nav className={`navbar ${isScrolled ? 'scrolled' : ''} ${isScrollingUp ? 'visible' : 'hidden'}`}>
+=======
+      <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
         <h1 className="logo">
           <Link to="/">EasyHome</Link>
         </h1>
@@ -136,6 +157,7 @@ const Home = () => {
           {isMenuOpen ? <FaTimes /> : <FaBars />}
         </button>
         <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+<<<<<<< HEAD
           <li><Link to="/home" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
           <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
           <li><Link to="/user/serviceproviders" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
@@ -155,6 +177,12 @@ const Home = () => {
           ) : (
             <li><Link to="/login" onClick={() => setIsMenuOpen(false)}>Sign In</Link></li>
           )}
+=======
+          <li><Link to="/home" onClick={() => setIsMenuOpen(false)}>Home</Link></li> 
+          <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
+          <li><Link to="/user/serviceproviders" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
+          <li><Link to="/login" onClick={() => setIsMenuOpen(false)}>Sign In</Link></li>
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
         </ul>
       </nav>
 

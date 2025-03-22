@@ -6,7 +6,11 @@ export const getPendingProviders = async (req, res) => {
   try {
     const pendingProviders = await ServiceProviderModel.find(
       { verificationStatus: "pending" },
+<<<<<<< HEAD
       "fullName email phoneNumber serviceType price createdAt"
+=======
+      "FullName Email PhoneNumber serviceType price createdAt"
+>>>>>>> bac57379d8024ffd9c5f0dc786aa7042a3207979
     ).sort({ createdAt: -1 });
 
     res.status(200).json({
