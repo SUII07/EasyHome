@@ -1,20 +1,160 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./Home.css";
-import { Link } from "react-router-dom";
-import { FaTools, FaPaintRoller, FaWater, FaThermometerHalf, FaHouseUser, FaExclamationTriangle, FaTwitter, FaFacebook, FaInstagram, FaYoutube } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaTools, FaPaintRoller, FaWater, FaThermometerHalf, FaHouseUser, FaExclamationTriangle, FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaBars, FaTimes, FaArrowRight, FaUserCircle } from "react-icons/fa";
+import { toast } from "react-hot-toast";
 
 const Home = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrollingUp, setIsScrollingUp] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 50);
+      setIsScrollingUp(currentScrollY < lastScrollY || currentScrollY <= 0);
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        localStorage.removeItem("user");
+        setUser(null);
+        toast.success("Logged out successfully");
+        navigate("/login");
+      } else {
+        throw new Error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const services = [
+    {
+      icon: <FaExclamationTriangle className="service-icon emergency-icon" />,
+      title: "Emergency Response",
+      description: "24/7 Rapid Emergency Response Team",
+      link: "/emergency",
+      buttonClass: "btn-danger",
+      buttonText: "Request Service"
+    },
+    {
+      icon: <FaHouseUser className="service-icon" />,
+      title: "House Cleaning",
+      description: "Professional Cleaning services for entire home",
+      link: "/Booking",
+      buttonClass: "btn-primary",
+      buttonText: "Request Service"
+    },
+    {
+      icon: <FaTools className="service-icon" />,
+      title: "Electrician",
+      description: "Expert electrical repair and installation services",
+      link: "/Booking",
+      buttonClass: "btn-primary",
+      buttonText: "Request Service"
+    },
+    {
+      icon: <FaPaintRoller className="service-icon" />,
+      title: "Painting",
+      description: "Interior and exterior painting services",
+      link: "/Booking",
+      buttonClass: "btn-primary",
+      buttonText: "Request Service"
+    },
+    {
+      icon: <FaWater className="service-icon" />,
+      title: "Plumbing",
+      description: "Plumbing and Water Damage Services",
+      link: "/Booking",
+      buttonClass: "btn-primary",
+      buttonText: "Request Service"
+    },
+    {
+      icon: <FaThermometerHalf className="service-icon" />,
+      title: "HVAC Services",
+      description: "Heating, and air conditioning maintenance",
+      link: "/Booking",
+      buttonClass: "btn-primary",
+      buttonText: "Request Service"
+    }
+  ];
+
+  const howItWorks = [
+    {
+      image: "./public/Service.png",
+      title: "Select Services",
+      description: "Browse through our wide range of home services"
+    },
+    {
+      image: "./public/Book.png",
+      title: "Book Services",
+      description: "Choose your preferred Services"
+    },
+    {
+      image: "./public/Get.png",
+      title: "Get Services",
+      description: "Our verified professional will deliver the services"
+    }
+  ];
+
   return (
     <div className="home-container">
-      <nav className="navbar">
+      <nav className={`navbar ${isScrolled ? 'scrolled' : ''} ${isScrollingUp ? 'visible' : 'hidden'}`}>
         <h1 className="logo">
-          <Link to="/">EasyHome</Link> 
+          <Link to="/">EasyHome</Link>
         </h1>
-        <ul className="nav-links">
-          <li><Link to="/home">Home</Link></li> 
-          <li><Link to="/about">About Us</Link></li>
-          <li><Link to="/services">Services</Link></li>
-          <li><Link to="/login">Sign In</Link></li>
+        <button className="menu-toggle" onClick={toggleMenu}>
+          {isMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+        <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+          <li><Link to="/home" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
+          <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
+          <li><Link to="/user/serviceproviders" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
+          {user ? (
+            <li className="user-profile-menu">
+              <div className="profile-trigger">
+                <FaUserCircle className="profile-icon" />
+                <span>{user.FullName || user.fullName}</span>
+                <div className="profile-dropdown">
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                    My Profile
+                  </Link>
+                  <button onClick={handleLogout}>Logout</button>
+                </div>
+              </div>
+            </li>
+          ) : (
+            <li><Link to="/login" onClick={() => setIsMenuOpen(false)}>Sign In</Link></li>
+          )}
         </ul>
       </nav>
 
@@ -22,7 +162,11 @@ const Home = () => {
         <div className="hero-content">
           <h2>Professional Home Services at Your Fingertips</h2>
           <p>Expert technicians, reliable service, and competitive pricing for all your home maintenance needs.</p>
-          <button className="btn-primary">Book a Service</button>
+          <Link to="/Booking">
+            <button className="btn-primary">
+              Book a Service <FaArrowRight className="arrow-icon" />
+            </button>
+          </Link>
         </div>
         <div className="hero-image">
           <img src="/HSP.png" alt="Home Service" />
@@ -31,118 +175,79 @@ const Home = () => {
 
       <section className="services">
         <h2>Our Services</h2>
+        <p className="section-subtitle">Choose from our wide range of professional home services</p>
         <div className="services-grid">
-          <div className="service-card emergency">
-            <FaExclamationTriangle className="service-icon emergency-icon" />
-            <h3>Emergency Response</h3>
-            <p>24/7 Rapid Emergency Response Team</p>
-            <Link to="/emergency">
-              <button className="btn-danger">Request Service</button>
-            </Link> 
-          </div>
-          <div className="service-card">
-            <FaHouseUser className="service-icon" />
-            <h3>House Cleaning</h3>
-            <p>Professional Cleaning services for entire home</p>
-            <Link to="/Booking">
-            <button className="btn-primary">Request Service</button>
-            </Link>
-          </div>
-          <div className="service-card">
-            <FaTools className="service-icon" />
-            <h3>Repairs & Maintenance</h3>
-            <p>Expert repair services for all house systems</p>
-            <Link to="/Booking">
-            <button className="btn-primary">Request Service</button>
-            </Link>
-          </div>
-          <div className="service-card">
-            <FaPaintRoller className="service-icon" />
-            <h3>Painting</h3>
-            <p>Interior and exterior painting services</p>
-            <Link to="/Booking">
-            <button className="btn-primary">Request Service</button>
-            </Link>
-          </div>
-          <div className="service-card">
-            <FaWater className="service-icon" />
-            <h3>Plumbing</h3>
-            <p>Plumbing and Water Damage Services</p>
-            <Link to="/Booking">
-              <button className="btn-primary">Request Service</button>
-            </Link> 
-          </div>
-          <div className="service-card">
-            <FaThermometerHalf className="service-icon" />
-            <h3>HVAC Services</h3>
-            <p>Heating, and air conditioning maintenance</p>
-            <Link to="/Booking">
-            <button className="btn-primary">Request Service</button>
-            </Link> 
-          </div>
+          {services.map((service, index) => (
+            <div key={index} className="service-card">
+              {service.icon}
+              <h3>{service.title}</h3>
+              <p>{service.description}</p>
+              <Link to={service.link}>
+                <button className={service.buttonClass}>
+                  {service.buttonText} <FaArrowRight className="arrow-icon" />
+                </button>
+              </Link>
+            </div>
+          ))}
         </div>
       </section>
 
       <section className="how-it-works">
         <h2>How it Works</h2>
+        <p className="section-subtitle">Simple steps to get the service you need</p>
         <div className="how-grid">
-          <div className="how-step">
-            <img src="./public/Service.png" alt="Select Services" />
-            <h3>Select Services</h3>
-            <p>Browse through our wide range of home services</p>
-          </div>
-          <div className="how-step">
-            <img src="./public/Book.png" alt="Book Services" />
-            <h3>Book Services</h3>
-            <p>Choose your preferred Services</p>
-          </div>
-          <div className="how-step">
-            <img src="./public/Get.png" alt="Get Services" />
-            <h3>Get Services</h3>
-            <p>Our verified professional will deliver the services</p>
-          </div>
+          {howItWorks.map((step, index) => (
+            <div key={index} className="how-step">
+              <div className="step-number">{index + 1}</div>
+              <img src={step.image} alt={step.title} />
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       <footer className="footer">
-        <div className="social-links">
-          <FaTwitter className="social-icon" />
-          <FaFacebook className="social-icon" />
-          <FaInstagram className="social-icon" />
-          <FaYoutube className="social-icon" />
+        <div className="footer-content">
+          <div className="social-links">
+            <a href="#" className="social-icon"><FaTwitter /></a>
+            <a href="#" className="social-icon"><FaFacebook /></a>
+            <a href="#" className="social-icon"><FaInstagram /></a>
+            <a href="#" className="social-icon"><FaYoutube /></a>
+          </div>
+          <div className="footer-columns">
+            <div className="footer-column">
+              <h3>EasyHome</h3>
+              <p>Your Trusted Partner For All Services</p>
+            </div>
+            <div className="footer-column">
+              <h3>Services</h3>
+              <ul>
+                <li><Link to="/services#cleaning">Cleaning</Link></li>
+                <li><Link to="/services#repairs">Repairs</Link></li>
+                <li><Link to="/services#painting">Painting</Link></li>
+                <li><Link to="/services#plumbing">Plumbing</Link></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h3>Company</h3>
+              <ul>
+                <li><Link to="/about">About Us</Link></li>
+                <li><Link to="/contact">Contact</Link></li>
+                <li><Link to="/careers">Careers</Link></li>
+                <li><Link to="/blog">Blog</Link></li>
+              </ul>
+            </div>
+            <div className="footer-column">
+              <h3>Contact</h3>
+              <ul>
+                <li><a href="mailto:support@homeservice.com">support@homeservice.com</a></li>
+                <li><a href="tel:1-800-EASY-HOME">1-800-EASY-HOME</a></li>
+              </ul>
+            </div>
+          </div>
+          <p className="footer-note">© 2025 EasyHome All Rights Reserved</p>
         </div>
-        <div className="footer-columns">
-          <div>
-            <h3>EasyHome</h3>
-            <p>Your Trusted Partner For All Services</p>
-          </div>
-          <div>
-            <h3>Services</h3>
-            <ul>
-              <li>Cleaning</li>
-              <li>Repairs</li>
-              <li>Painting</li>
-              <li>Plumbing</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Company</h3>
-            <ul>
-              <li>About Us</li>
-              <li>Contact</li>
-              <li>Careers</li>
-              <li>Blog</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Contact</h3>
-            <ul>
-              <li>support@homeservice.com</li>
-              <li>1-800-EASY-HOME</li>
-            </ul>
-          </div>
-        </div>
-        <p className="footer-note">© 2025 EasyHome All Rights Reserved</p>
       </footer>
     </div>
   );

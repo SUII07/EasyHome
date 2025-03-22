@@ -1,32 +1,32 @@
-// routes/bookingRoutes.js
 import express from "express";
-import Booking from "../models/Booking.js";
+import { verifyToken } from "../middleware/auth.js";
+import {
+  createBooking,
+  getCustomerBookings,
+  getServiceProviderBookings,
+  updateBookingStatus,
+  getBookingDetails,
+  getProviders
+} from "../controllers/BookingController.js";
 
 const router = express.Router();
 
+// Get available service providers for booking (must be before parameterized routes)
+router.post("/getProviders", getProviders);
+
+// Get all bookings for a customer
+router.get("/customer", verifyToken, getCustomerBookings);
+
+// Get all bookings for a service provider
+router.get("/provider", verifyToken, getServiceProviderBookings);
+
+// Get booking details by ID
+router.get("/:bookingId", verifyToken, getBookingDetails);
+
 // Create a new booking
-router.post("/create", async (req, res) => {
-  const { customerName, serviceType, serviceProviderName, address, phoneNumber, description } = req.body;
+router.post("/", verifyToken, createBooking);
 
-  try {
-    console.log("Received booking data:", req.body); // Log the received data
+// Update booking status
+router.patch("/:bookingId/status", verifyToken, updateBookingStatus);
 
-    const newBooking = new Booking({
-      customerName,
-      serviceType,
-      serviceProviderName,
-      address,
-      phoneNumber,
-      description,
-    });
-
-    await newBooking.save();
-    console.log("Booking saved:", newBooking); // Log the saved booking
-    res.json({ message: "Booking created successfully", booking: newBooking });
-  } catch (error) {
-    console.error("Error creating booking:", error);
-    res.status(500).json({ message: "Error creating booking", error });
-  }
-});
-
-export default router;
+export default router; 

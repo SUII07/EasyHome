@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import DbCon from "./utils/db.js";
 import AuthRoutes from "./routes/Auth.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
-import serviceProviderRoutes from "./routes/serviceProviderRoutes.js";
+import serviceProviderRoutes from "./routes/serviceProviderController.js";
 import bookingRoutes from "./routes/bookingRoutes.js";
 
 dotenv.config();
@@ -13,22 +13,36 @@ dotenv.config();
 const PORT = process.env.PORT || 4000;
 const app = express();
 
-DbCon();
+// Initialize the server
+const startServer = async () => {
+  try {
+    // Connect to MongoDB
+    await DbCon();
 
-app.use(express.json());
-app.use(cookieParser());
-app.use(
-  cors({
-    credentials: true,
-    origin: ["http://localhost:5174"],
-  })
-);
+    // Middleware
+    app.use(express.json());
+    app.use(cookieParser());
+    app.use(
+      cors({
+        credentials: true,
+        origin: ["http://localhost:5173", "http://localhost:5174"],
+      })
+    );
 
-app.use("/api/auth", AuthRoutes);
-app.use("/api/admin", AdminRoutes);
-app.use("/api/serviceProvider", serviceProviderRoutes);
-app.use("/api/booking", bookingRoutes);
+    // Routes
+    app.use("/api/auth", AuthRoutes);
+    app.use("/api/admin", AdminRoutes);
+    app.use("/api/serviceProvider", serviceProviderRoutes);
+    app.use("/api/booking", bookingRoutes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on ${PORT}`);
-});
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server is running on ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

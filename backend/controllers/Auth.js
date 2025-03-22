@@ -7,38 +7,38 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
-    const { FullName, PhoneNumber, ZipCode, Email, password, ConfirmPassword, role } = req.body;
+    const { fullName, phoneNumber, zipCode, email, password, confirmPassword, role, serviceType, price } = req.body;
 
-    console.log("Received registration request:", { FullName, PhoneNumber, ZipCode, Email, role });
+    console.log("Received registration request:", { fullName, phoneNumber, zipCode, email, role, serviceType, price });
 
-    if (!FullName || !PhoneNumber || !ZipCode || !Email || !password || !ConfirmPassword) {
+    if (!fullName || !phoneNumber || !zipCode || !email || !password || !confirmPassword) {
       console.log("Missing required fields");
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     // Check if the email already exists in any of the role-specific collections
-    const existingAdmin = await AdminModel.findOne({ Email });
-    const existingCustomer = await CustomerModel.findOne({ Email });
-    const existingServiceProvider = await ServiceProviderModel.findOne({ Email });
+    const existingAdmin = await AdminModel.findOne({ Email: email });
+    const existingCustomer = await CustomerModel.findOne({ Email: email });
+    const existingServiceProvider = await ServiceProviderModel.findOne({ Email: email });
 
     if (existingAdmin || existingCustomer || existingServiceProvider) {
-      console.log("User already exists:", Email);
+      console.log("User already exists:", email);
       return res.status(409).json({ success: false, message: "User already exists" });
     }
 
-    if (password !== ConfirmPassword) {
+    if (password !== confirmPassword) {
       console.log("Passwords do not match");
       return res.status(400).json({ success: false, message: "Passwords do not match" });
     }
 
     let newUser;
 
-    if (Email.includes(".admin@")) {
+    if (email.includes(".admin@")) {
       newUser = new AdminModel({
-        FullName,
-        PhoneNumber,
-        ZipCode,
-        Email,
+        FullName: fullName,
+        PhoneNumber: phoneNumber,
+        ZipCode: zipCode,
+        Email: email,
         password: await bcryptjs.hash(password, 10),
         role: "admin",
       });
@@ -51,21 +51,61 @@ const register = async (req, res) => {
 
       if (role === "customer") {
         newUser = new CustomerModel({
-          FullName,
-          PhoneNumber,
-          ZipCode,
-          Email,
+          FullName: fullName,
+          PhoneNumber: phoneNumber,
+          ZipCode: zipCode,
+          Email: email,
           password: await bcryptjs.hash(password, 10),
           role: "customer",
         });
       } else if (role === "serviceprovider") {
+        // Ensure serviceType and price are provided for service providers
+        if (!serviceType || !price) {
+          console.log("Service type and price are required for service providers");
+          return res.status(400).json({ 
+            success: false, 
+            message: "Service type and price are required for service providers" 
+          });
+        }
+
+        // Convert serviceType to lowercase for consistency
+        const normalizedServiceType = serviceType.toLowerCase();
+
+        // Validate service type against allowed values
+        const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services"];
+        if (!validServiceTypes.includes(normalizedServiceType)) {
+          console.log("Invalid service type:", serviceType);
+          return res.status(400).json({
+            success: false,
+            message: "Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services"
+          });
+        }
+
+        // Validate price
+        const numericPrice = parseFloat(price);
+        if (isNaN(numericPrice) || numericPrice <= 0) {
+          console.log("Invalid price:", price);
+          return res.status(400).json({
+            success: false,
+            message: "Please enter a valid price greater than 0"
+          });
+        }
+
         newUser = new ServiceProviderModel({
-          FullName,
-          PhoneNumber,
-          ZipCode,
-          Email,
+          fullName: fullName,
+          phoneNumber: phoneNumber,
+          zipCode: zipCode,
+          email: email,
           password: await bcryptjs.hash(password, 10),
           role: "serviceprovider",
+          serviceType: normalizedServiceType,
+          price: numericPrice,
+          verificationStatus: "pending",
+          isVerified: false,
+          rating: 0,
+          totalReviews: 0,
+          experience: 0,
+          availability: true
         });
       }
     }
@@ -76,20 +116,27 @@ const register = async (req, res) => {
     res.status(201).json({ success: true, message: "User registered successfully", role });
   } catch (error) {
     console.error("Error during registration:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Validation error", 
+        errors: Object.values(error.errors).map(err => err.message)
+      });
+    }
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
   }
 };
 
 const Login = async (req, res) => {
   try {
-    const { Email, password } = req.body;
+    const { email, password } = req.body;
 
     // Check all role-specific collections for the user
-    const admin = await AdminModel.findOne({ Email });
-    const customer = await CustomerModel.findOne({ Email });
-    const serviceProvider = await ServiceProviderModel.findOne({ Email });
+    const admin = await AdminModel.findOne({ Email: email });
+    const customer = await CustomerModel.findOne({ Email: email });
+    const serviceProvider = await ServiceProviderModel.findOne({ email });
 
-    const user = admin || customer || serviceProvider;
+    let user = admin || customer || serviceProvider;
 
     if (!user) {
       return res.status(404).json({ success: false, message: "Invalid credentials" });
@@ -100,25 +147,66 @@ const Login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // Include role in the token payload
+    // Set role based on which model found the user
+    if (admin) {
+      user.role = "admin";
+    } else if (customer) {
+      user.role = "customer";
+    } else if (serviceProvider) {
+      user.role = "serviceprovider";
+    }
+
+    // Special handling for service providers
+    if (user.role === "serviceprovider") {
+      if (user.verificationStatus === "pending") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account is pending admin approval. Please wait for verification."
+        });
+      }
+      if (user.verificationStatus === "rejected") {
+        return res.status(403).json({
+          success: false,
+          message: "Your account has been rejected. Please contact support for more information."
+        });
+      }
+    }
+
+    // Include role, verification status, and other relevant info in the token payload
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { 
+        userId: user._id, 
+        role: user.role, 
+        fullName: user.fullName || user.FullName,
+        verificationStatus: user.verificationStatus || 'approved'
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    
+
     res.cookie("token", token, {
-      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
-      secure: process.env.NODE_ENV === "production", // Ensures cookies are sent over HTTPS in production
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: 3600000, // 1 hour
     });
-    
-    res.status(200).json({ success: true, message: "Login successful", user: { _id: user._id, role: user.role } });
+
+    const responseData = {
+      success: true,
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        role: user.role,
+        fullName: user.fullName || user.FullName,
+        verificationStatus: user.verificationStatus || 'approved',
+        email: user.email || user.Email
+      }
+    };
+
+    console.log("Login response sent:", responseData);
+    res.status(200).json(responseData);
   } catch (error) {
     console.error("Error during login:", error);
-    res.status(500).json({ success: false, message: "Internal server error" }
-      
-    );
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -133,4 +221,80 @@ const Logout = async (req, res) => {
   }
 };
 
-export { register, Login, Logout };
+// Get user profile
+const getUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Try to find user in any of the collections
+    const admin = await AdminModel.findById(id).select('-password');
+    const customer = await CustomerModel.findById(id).select('-password');
+    const serviceProvider = await ServiceProviderModel.findById(id).select('-password');
+
+    const user = admin || customer || serviceProvider;
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ success: false, message: "Error fetching user data" });
+  }
+};
+
+// Update user profile
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Remove sensitive fields from updates
+    delete updates.password;
+    delete updates.role;
+
+    // Try to update in all collections (only one will succeed)
+    const [updatedAdmin, updatedCustomer, updatedServiceProvider] = await Promise.all([
+      AdminModel.findByIdAndUpdate(id, updates, { new: true }).select('-password'),
+      CustomerModel.findByIdAndUpdate(id, updates, { new: true }).select('-password'),
+      ServiceProviderModel.findByIdAndUpdate(id, updates, { new: true }).select('-password')
+    ]);
+
+    const updatedUser = updatedAdmin || updatedCustomer || updatedServiceProvider;
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ success: false, message: "Error updating user data" });
+  }
+};
+
+// Delete user account
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Try to delete from all collections (only one will succeed)
+    const [deletedAdmin, deletedCustomer, deletedServiceProvider] = await Promise.all([
+      AdminModel.findByIdAndDelete(id),
+      CustomerModel.findByIdAndDelete(id),
+      ServiceProviderModel.findByIdAndDelete(id)
+    ]);
+
+    if (!deletedAdmin && !deletedCustomer && !deletedServiceProvider) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ success: false, message: "Error deleting user" });
+  }
+};
+
+export { register, Login, Logout, getUser, updateUser, deleteUser };

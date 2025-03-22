@@ -1,10 +1,7 @@
-// components/Booking.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaUser, FaMapMarkerAlt, FaPhone, FaTools, FaCalendarAlt, FaFileAlt, FaArrowRight } from "react-icons/fa";
 import { toast } from "react-hot-toast";
-import ServiceProviderCard from './components/ServiceProviderCard';
+import ServiceProviderCard from "./ServiceProviderCard";
 import "./Booking.css";
 
 const Booking = () => {
@@ -20,7 +17,6 @@ const Booking = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [providers, setProviders] = useState([]);
-  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -35,11 +31,6 @@ const Booking = () => {
     } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = "Please enter a valid phone number";
     }
-    if (!formData.zipCode.trim()) {
-      newErrors.zipCode = "ZIP code is required";
-    } else if (!/^\d+$/.test(formData.zipCode)) {
-      newErrors.zipCode = "Please enter a valid ZIP code (numbers only)";
-    }
     if (!formData.preferredDate) {
       newErrors.preferredDate = "Preferred date is required";
     } else if (new Date(formData.preferredDate) < new Date()) {
@@ -52,7 +43,6 @@ const Booking = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
@@ -66,22 +56,14 @@ const Booking = () => {
     }
     setIsLoading(true);
     try {
-      console.log('Sending request with:', { 
-        serviceType: formData.serviceType, 
-        zipCode: formData.zipCode,
-        address: formData.address 
-      });
-
+      const zipCode = formData.address.split(',').pop().trim();
       const response = await axios.post("http://localhost:4000/api/booking/getProviders", {
         serviceType: formData.serviceType,
-        zipCode: formData.zipCode
+        zipCode
       });
-      
-      console.log('Response received:', response.data);
       
       if (response.data && response.data.success && response.data.providers.length > 0) {
         setProviders(response.data.providers);
-        console.log('Providers set in state:', response.data.providers);
       } else {
         toast.error(response.data?.message || "No service providers found for the selected service in your area");
       }
@@ -94,39 +76,20 @@ const Booking = () => {
   };
 
   const services = [
-    { value: "house cleaning", label: "House Cleaning", icon: <FaTools /> },
-    { value: "electrician", label: "Electrician", icon: <FaTools /> },
-    { value: "painting", label: "Painting", icon: <FaTools /> },
-    { value: "plumbing", label: "Plumbing", icon: <FaTools /> },
-    { value: "hvac services", label: "HVAC Services", icon: <FaTools /> }
+    { value: "house cleaning", label: "House Cleaning" },
+    { value: "electrician", label: "Electrician" },
+    { value: "painting", label: "Painting" },
+    { value: "plumbing", label: "Plumbing" },
+    { value: "hvac services", label: "HVAC Services" }
   ];
 
   return (
-    <div className="container">
-      <nav className="navbar">
-        <h1 className="logo">
-          <Link to="/">EasyHome</Link>
-        </h1>
-        <ul className="nav-links">
-          <li><Link to="/home">Home</Link></li>
-          <li><Link to="/about">About Us</Link></li>
-          <li><Link to="/services">Services</Link></li>
-          <li><Link to="/login">Sign In</Link></li>
-        </ul>
-      </nav>
-
-      <div className="service-form">
-        <div className="form-header">
-          <h2>Book a Service</h2>
-          <p>Please fill out the form below for a better service experience.</p>
-        </div>
-
+    <div className="booking-container">
+      <div className="booking-form-section">
+        <h2>Book a Service</h2>
         <form onSubmit={handleGetPrice} className="booking-form">
           <div className="form-group">
-            <label>
-              <FaUser className="input-icon" />
-              Full Name
-            </label>
+            <label>Full Name</label>
             <input
               type="text"
               name="fullName"
@@ -139,10 +102,7 @@ const Booking = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              <FaMapMarkerAlt className="input-icon" />
-              Address
-            </label>
+            <label>Address</label>
             <input
               type="text"
               name="address"
@@ -155,26 +115,7 @@ const Booking = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              <FaMapMarkerAlt className="input-icon" />
-              ZIP Code
-            </label>
-            <input
-              type="text"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              placeholder="Enter your ZIP code"
-              className={errors.zipCode ? "error" : ""}
-            />
-            {errors.zipCode && <span className="error-message">{errors.zipCode}</span>}
-          </div>
-
-          <div className="form-group">
-            <label>
-              <FaPhone className="input-icon" />
-              Phone Number
-            </label>
+            <label>Phone Number</label>
             <input
               type="tel"
               name="phoneNumber"
@@ -187,10 +128,7 @@ const Booking = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              <FaTools className="input-icon" />
-              Service Type
-            </label>
+            <label>Service Type</label>
             <select
               name="serviceType"
               value={formData.serviceType}
@@ -206,10 +144,7 @@ const Booking = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              <FaCalendarAlt className="input-icon" />
-              Preferred Date
-            </label>
+            <label>Preferred Date</label>
             <input
               type="date"
               name="preferredDate"
@@ -222,10 +157,7 @@ const Booking = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              <FaFileAlt className="input-icon" />
-              Description
-            </label>
+            <label>Description</label>
             <textarea
               name="description"
               value={formData.description}
@@ -241,7 +173,6 @@ const Booking = () => {
             disabled={isLoading}
           >
             {isLoading ? 'Finding Providers...' : 'Get Price'}
-            <FaArrowRight className="arrow-icon" />
           </button>
         </form>
       </div>
@@ -256,52 +187,8 @@ const Booking = () => {
           </div>
         </div>
       )}
-
-      <footer className="footer">
-        <div className="social-links">
-          <a href="#" className="social-icon"><FaTwitter /></a>
-          <a href="#" className="social-icon"><FaFacebook /></a>
-          <a href="#" className="social-icon"><FaInstagram /></a>
-          <a href="#" className="social-icon"><FaYoutube /></a>
-        </div>
-
-        <div className="footer-columns">
-          <div className="footer-column">
-            <h3>EasyHome</h3>
-            <p>Your Trusted Partner For All Services</p>
-          </div>
-          <div className="footer-column">
-            <h3>Services</h3>
-            <ul>
-              <li><Link to="/services#cleaning">House Cleaning</Link></li>
-              <li><Link to="/services#repairs">Repairs & Maintenance</Link></li>
-              <li><Link to="/services#painting">Painting</Link></li>
-              <li><Link to="/services#plumbing">Plumbing</Link></li>
-              <li><Link to="/services#hvac">HVAC Services</Link></li>
-            </ul>
-          </div>
-          <div className="footer-column">
-            <h3>Company</h3>
-            <ul>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/careers">Careers</Link></li>
-              <li><Link to="/blog">Blog</Link></li>
-            </ul>
-          </div>
-          <div className="footer-column">
-            <h3>Contact</h3>
-            <ul>
-              <li><a href="mailto:support@homeservice.com">support@homeservice.com</a></li>
-              <li><a href="tel:1-800-EASY-HOME">1-800-EASY-HOME</a></li>
-            </ul>
-          </div>
-        </div>
-
-        <p className="footer-note">© 2025 EasyHome All Rights Reserved</p>
-      </footer>
     </div>
   );
 };
 
-export default Booking;
+export default Booking; 
