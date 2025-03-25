@@ -245,7 +245,7 @@ const Admin = () => {
           </div>
         </td>
         <td>{user.PhoneNumber}</td>
-        <td>{user.ZipCode}</td>
+        <td>{user.Address}</td>
         <td>
           <span className={`status ${user.verificationStatus?.toLowerCase() || 'active'}`}>
             {user.verificationStatus || 'Active'}
@@ -477,7 +477,7 @@ const Admin = () => {
                   <tr>
                     <th>User</th>
                     <th>Phone Number</th>
-                    <th>Location</th>
+                    <th>Address</th>
                     <th>Status</th>
                     <th>Joined</th>
                     <th>Actions</th>

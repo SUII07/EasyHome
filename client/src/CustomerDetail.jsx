@@ -95,34 +95,34 @@ const CustomerDetail = () => {
 
   return (
     <div className="customer-detail-container">
-      <div className="header">
-        <button className="back-button" onClick={() => navigate("/admin/customers")}>
-          <FaArrowLeft /> Back to Customers
-        </button>
-        <div className="header-actions">
-          {isEditing ? (
-            <>
-              <button className="save-button" onClick={handleSave}>
-                <FaSave /> Save Changes
-              </button>
-              <button className="cancel-button" onClick={handleCancel}>
-                <FaTimes /> Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="edit-button" onClick={handleEdit}>
-                <FaEdit /> Edit Customer
-              </button>
-              <button className="delete-button" onClick={handleDelete}>
-                <FaTrash /> Delete Customer
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       <div className="customer-profile">
+        <div className="detail-header">
+          <button className="back-button" onClick={() => navigate("/admin/customers")}>
+            <FaArrowLeft />
+          </button>
+          <div className="header-actions">
+            {isEditing ? (
+              <>
+                <button className="save-button" onClick={handleSave}>
+                  <FaSave /> Save Changes
+                </button>
+                <button className="cancel-button" onClick={handleCancel}>
+                  <FaTimes /> Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="edit-button" onClick={handleEdit}>
+                  <FaEdit /> Edit Customer
+                </button>
+                <button className="delete-button" onClick={handleDelete}>
+                  <FaTrash /> Delete Customer
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="profile-header">
           <div className="avatar">
             <FaUser />
@@ -183,17 +183,17 @@ const CustomerDetail = () => {
             <div className="detail-item">
               <FaMapMarkerAlt className="detail-icon" />
               <div className="detail-content">
-                <label>Zip Code</label>
+                <label>Address</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    name="ZipCode"
-                    value={editedCustomer.ZipCode}
+                    name="Address"
+                    value={editedCustomer.Address}
                     onChange={handleChange}
                     className="edit-input"
                   />
                 ) : (
-                  <p>{customer.ZipCode}</p>
+                  <p>{customer.Address}</p>
                 )}
               </div>
             </div>

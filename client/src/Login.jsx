@@ -36,6 +36,8 @@ export default function Login() {
 
         // Store user details in localStorage
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        localStorage.setItem("token", response.data.token);
+        console.log("Stored user data in localStorage:", JSON.parse(localStorage.getItem("user")));
 
         // Handle redirection based on role and verification status
         if (!role) {
@@ -46,21 +48,28 @@ export default function Login() {
         }
 
         const userRole = role.toLowerCase();
+        console.log("Processing redirection for role:", userRole);
+        
         switch (userRole) {
           case "admin":
+            console.log("Redirecting to admin dashboard");
             navigate("/admin");
             toast.success("Welcome Admin!");
             break;
           
           case "serviceprovider":
+            console.log("Processing service provider redirection");
             if (verificationStatus === "approved") {
+              console.log("Service provider approved, redirecting to dashboard");
               navigate("/serviceprovider");
               toast.success("Welcome to your service provider dashboard!");
             } else if (verificationStatus === "pending") {
+              console.log("Service provider pending approval");
               setError("Your account is pending admin approval. Please wait for verification.");
               toast.error("Your account is pending admin approval. Please wait for verification.");
               localStorage.removeItem("user");
             } else if (verificationStatus === "rejected") {
+              console.log("Service provider rejected");
               setError("Your account has been rejected. Please contact support.");
               toast.error("Your account has been rejected. Please contact support.");
               localStorage.removeItem("user");
@@ -68,20 +77,22 @@ export default function Login() {
             break;
           
           case "customer":
+            console.log("Redirecting to customer home");
             navigate("/home");
             toast.success("Welcome!");
             break;
           
           default:
-            console.log("Unknown role:", role);
+            console.log("Unknown role:", role, "redirecting to home");
             navigate("/home");
             toast.success("Welcome!");
             break;
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Login error:", error);
       if (error.response) {
+        console.error("Error response:", error.response.data);
         setError(error.response.data.message || "Login failed. Please check your credentials.");
         toast.error(error.response.data.message || "Login failed. Please check your credentials.");
       } else {

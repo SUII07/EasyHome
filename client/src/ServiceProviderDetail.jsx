@@ -12,13 +12,14 @@ const ServiceProviderDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProvider, setEditedProvider] = useState({
-    FullName: "",
-    Email: "",
-    PhoneNumber: "",
-    ZipCode: "",
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    address: "",
     serviceType: "",
     isVerified: false,
     status: "",
+    price: "",
   });
   const [error, setError] = useState(null);
 
@@ -31,13 +32,26 @@ const ServiceProviderDetail = () => {
       setIsLoading(true);
       setError(null);
       const response = await axios.get(
-        `http://localhost:4000/api/admin/serviceproviders/${id}`,
+        `http://localhost:4000/api/serviceprovider/details/${id}`,
         { withCredentials: true }
       );
       console.log("API Response:", response.data); // Log the response
       if (response.data && response.data.provider) {
-        setProvider(response.data.provider);
-        setEditedProvider(response.data.provider); // Initialize editedProvider with fetched data
+        const provider = response.data.provider;
+        // Normalize the provider data to use consistent field names
+        const normalizedProvider = {
+          ...provider,
+          fullName: provider.fullName || provider.FullName,
+          email: provider.email || provider.Email,
+          phoneNumber: provider.phoneNumber || provider.PhoneNumber,
+          address: provider.address || provider.Address,
+          price: provider.price || provider.Price,
+          serviceType: provider.serviceType || provider.ServiceType,
+          verificationStatus: provider.verificationStatus || provider.VerificationStatus || "pending"
+        };
+        setProvider(normalizedProvider);
+        setEditedProvider(normalizedProvider);
+        console.log("Normalized provider data:", normalizedProvider);
       } else {
         setError("Provider data not found");
         toast.error("Provider data not found");
@@ -57,13 +71,38 @@ const ServiceProviderDetail = () => {
 
   const handleSave = async () => {
     try {
+      // Create update payload with consistent field names
+      const updatePayload = {
+        fullName: editedProvider.fullName,
+        email: editedProvider.email,
+        phoneNumber: editedProvider.phoneNumber,
+        address: editedProvider.address,
+        serviceType: editedProvider.serviceType,
+        price: editedProvider.price,
+        verificationStatus: editedProvider.verificationStatus
+      };
+
+      console.log("Sending update payload:", updatePayload);
+
       const response = await axios.put(
         `http://localhost:4000/api/admin/serviceproviders/${id}`,
-        editedProvider,
+        updatePayload,
         { withCredentials: true }
       );
+      
       if (response.data && response.data.provider) {
-        setProvider(response.data.provider);
+        // Normalize the response data
+        const normalizedProvider = {
+          ...response.data.provider,
+          fullName: response.data.provider.fullName || response.data.provider.FullName,
+          email: response.data.provider.email || response.data.provider.Email,
+          phoneNumber: response.data.provider.phoneNumber || response.data.provider.PhoneNumber,
+          address: response.data.provider.address || response.data.provider.Address,
+          price: response.data.provider.price || response.data.provider.Price,
+          serviceType: response.data.provider.serviceType || response.data.provider.ServiceType
+        };
+        setProvider(normalizedProvider);
+        setEditedProvider(normalizedProvider);
         setIsEditing(false);
         toast.success("Service provider details updated successfully");
       } else {
@@ -139,34 +178,34 @@ const ServiceProviderDetail = () => {
 
   return (
     <div className="provider-detail-container">
-      <div className="header">
-        <button className="back-button" onClick={() => navigate("/admin/serviceproviders")}>
-          <FaArrowLeft /> Back to Service Providers
-        </button>
-        <div className="header-actions">
-          {isEditing ? (
-            <>
-              <button className="save-button" onClick={handleSave}>
-                <FaSave /> Save Changes
-              </button>
-              <button className="cancel-button" onClick={handleCancel}>
-                <FaTimes /> Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="edit-button" onClick={handleEdit}>
-                <FaEdit /> Edit Provider
-              </button>
-              <button className="delete-button" onClick={handleDelete}>
-                <FaTrash /> Delete Provider
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
       <div className="provider-profile">
+        <div className="detail-header">
+          <button className="back-button" onClick={() => navigate("/admin/serviceproviders")}>
+            <FaArrowLeft />
+          </button>
+          <div className="header-actions">
+            {isEditing ? (
+              <>
+                <button className="save-button" onClick={handleSave}>
+                  <FaSave /> Save Changes
+                </button>
+                <button className="cancel-button" onClick={handleCancel}>
+                  <FaTimes /> Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="edit-button" onClick={handleEdit}>
+                  <FaEdit /> Edit Provider
+                </button>
+                <button className="delete-button" onClick={handleDelete}>
+                  <FaTrash /> Delete Provider
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="profile-header">
           <div className="avatar">
             <FaUser />
@@ -176,13 +215,13 @@ const ServiceProviderDetail = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  name="FullName"
-                  value={editedProvider.FullName || ""}
+                  name="fullName"
+                  value={editedProvider.fullName || ""}
                   onChange={handleChange}
                   className="edit-input"
                 />
               ) : (
-                provider.FullName || "Unnamed Provider"
+                provider.fullName || "Unnamed Provider"
               )}
             </h2>
             <p className="provider-id">ID: {provider._id || "N/A"}</p>
@@ -199,13 +238,13 @@ const ServiceProviderDetail = () => {
                 {isEditing ? (
                   <input
                     type="email"
-                    name="Email"
-                    value={editedProvider.Email || ""}
+                    name="email"
+                    value={editedProvider.email || ""}
                     onChange={handleChange}
                     className="edit-input"
                   />
                 ) : (
-                  <p>{provider.Email || "N/A"}</p>
+                  <p>{provider.email || "N/A"}</p>
                 )}
               </div>
             </div>
@@ -217,13 +256,13 @@ const ServiceProviderDetail = () => {
                 {isEditing ? (
                   <input
                     type="tel"
-                    name="PhoneNumber"
-                    value={editedProvider.PhoneNumber || ""}
+                    name="phoneNumber"
+                    value={editedProvider.phoneNumber || ""}
                     onChange={handleChange}
                     className="edit-input"
                   />
                 ) : (
-                  <p>{provider.PhoneNumber || "N/A"}</p>
+                  <p>{provider.phoneNumber || "N/A"}</p>
                 )}
               </div>
             </div>
@@ -231,17 +270,17 @@ const ServiceProviderDetail = () => {
             <div className="detail-item">
               <FaMapMarkerAlt className="detail-icon" />
               <div className="detail-content">
-                <label>Zip Code</label>
+                <label>Address</label>
                 {isEditing ? (
                   <input
                     type="text"
-                    name="ZipCode"
-                    value={editedProvider.ZipCode || ""}
+                    name="address"
+                    value={editedProvider.address || ""}
                     onChange={handleChange}
                     className="edit-input"
                   />
                 ) : (
-                  <p>{provider.ZipCode || "N/A"}</p>
+                  <p>{provider.address || "N/A"}</p>
                 )}
               </div>
             </div>
@@ -273,7 +312,7 @@ const ServiceProviderDetail = () => {
               <FaStar className="detail-icon" />
               <div className="detail-content">
                 <label>Rating</label>
-                <p>{provider.Rating || "No ratings yet"}</p>
+                <p>{provider.rating || "No ratings yet"}</p>
               </div>
             </div>
 
@@ -283,7 +322,7 @@ const ServiceProviderDetail = () => {
                 <label>Verification Status</label>
                 {isEditing ? (
                   <select
-                    name="status"
+                    name="verificationStatus"
                     value={editedProvider.verificationStatus || ""}
                     onChange={handleChange}
                     className="edit-input"
@@ -296,6 +335,26 @@ const ServiceProviderDetail = () => {
                   <p className={`status ${provider.verificationStatus?.toLowerCase() || 'pending'}`}>
                     {provider.verificationStatus === 'approved' ? 'Approved' : provider.verificationStatus || 'Pending'}
                   </p>
+                )}
+              </div>
+            </div>
+
+            <div className="detail-item">
+              <FaStar className="detail-icon" />
+              <div className="detail-content">
+                <label>Price per Hour</label>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    name="price"
+                    value={editedProvider.price || ""}
+                    onChange={handleChange}
+                    className="edit-input"
+                    min="0"
+                    step="0.01"
+                  />
+                ) : (
+                  <p>${provider.price || "N/A"}</p>
                 )}
               </div>
             </div>

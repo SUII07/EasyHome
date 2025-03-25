@@ -1,64 +1,43 @@
-import React, { useState } from 'react';
-import { FaStar, FaPhone, FaTools, FaUser } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
-import BookingModal from './BookingModal';
+import React from 'react';
+import { FaStar, FaUser, FaMapMarkerAlt, FaTools, FaDollarSign } from 'react-icons/fa';
 import './ServiceProviderCard.css';
 
 const ServiceProviderCard = ({ provider }) => {
-  const [showBookingModal, setShowBookingModal] = useState(false);
-  const navigate = useNavigate();
-
-  const handleBook = () => {
-    setShowBookingModal(true);
-  };
-
-  const handleCancel = () => {
-    navigate('/');
-  };
-
   return (
     <div className="provider-card">
       <div className="provider-header">
-        <FaUser className="provider-icon" />
-        <h3>{provider.FullName}</h3>
-      </div>
-
-      <div className="provider-details">
-        <div className="detail-item">
-          <FaPhone className="detail-icon" />
-          <span>{provider.PhoneNumber}</span>
+        <div className="provider-avatar">
+          <FaUser />
         </div>
-        
+        <div className="provider-info">
+          <h3>{provider.fullName}</h3>
+          <div className="provider-rating">
+            <FaStar className="star-icon" />
+            <span>{provider.rating || 'No ratings'}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="provider-details">
         <div className="detail-item">
           <FaTools className="detail-icon" />
           <span>{provider.serviceType}</span>
         </div>
-
         <div className="detail-item">
-          <FaStar className="detail-icon" />
-          <span>
-            {provider.rating > 0 
-              ? `${provider.rating.toFixed(1)} (${provider.totalReviews} reviews)`
-              : 'No reviews yet'}
-          </span>
+          <FaMapMarkerAlt className="detail-icon" />
+          <span>{provider.zipCode}</span>
+        </div>
+        <div className="detail-item">
+          <FaDollarSign className="detail-icon" />
+          <span>${provider.price}/hr</span>
         </div>
       </div>
 
-      <div className="provider-actions">
-        <button className="book-button" onClick={handleBook}>
-          Book Now
-        </button>
-        <button className="cancel-button" onClick={handleCancel}>
-          Cancel
-        </button>
+      <div className="provider-status">
+        <span className={`status-badge ${provider.isAvailable ? 'available' : 'unavailable'}`}>
+          {provider.isAvailable ? 'Available' : 'Unavailable'}
+        </span>
       </div>
-
-      {showBookingModal && (
-        <BookingModal 
-          provider={provider} 
-          onClose={() => setShowBookingModal(false)} 
-        />
-      )}
     </div>
   );
 };

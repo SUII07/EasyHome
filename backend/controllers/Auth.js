@@ -7,18 +7,18 @@ import jwt from "jsonwebtoken";
 // Register function
 const register = async (req, res) => {
   try {
-    const { fullName, phoneNumber, zipCode, email, password, confirmPassword, role, serviceType, price } = req.body;
+    const { fullName, phoneNumber, address, email, password, confirmPassword, role, serviceType, price } = req.body;
 
-    console.log("Received registration request:", { fullName, phoneNumber, zipCode, email, role, serviceType, price });
+    console.log("Received registration request:", { fullName, phoneNumber, address, email, role, serviceType, price });
 
-    if (!fullName || !phoneNumber || !zipCode || !email || !password || !confirmPassword) {
+    if (!fullName || !phoneNumber || !address || !email || !password || !confirmPassword) {
       console.log("Missing required fields");
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
     // Check if the email already exists in any of the role-specific collections
-    const existingAdmin = await AdminModel.findOne({ email });
-    const existingCustomer = await CustomerModel.findOne({ email });
+    const existingAdmin = await AdminModel.findOne({ Email: email });
+    const existingCustomer = await CustomerModel.findOne({ Email: email });
     const existingServiceProvider = await ServiceProviderModel.findOne({ email });
 
     if (existingAdmin || existingCustomer || existingServiceProvider) {
@@ -35,10 +35,10 @@ const register = async (req, res) => {
 
     if (email.includes(".admin@")) {
       newUser = new AdminModel({
-        fullName,
-        phoneNumber,
-        zipCode,
-        email,
+        FullName: fullName,
+        PhoneNumber: phoneNumber,
+        Address: address,
+        Email: email,
         password: await bcryptjs.hash(password, 10),
         role: "admin",
       });
@@ -51,10 +51,10 @@ const register = async (req, res) => {
 
       if (role === "customer") {
         newUser = new CustomerModel({
-          fullName,
-          phoneNumber,
-          zipCode,
-          email,
+          FullName: fullName,
+          PhoneNumber: phoneNumber,
+          Address: address,
+          Email: email,
           password: await bcryptjs.hash(password, 10),
           role: "customer",
         });
@@ -94,7 +94,7 @@ const register = async (req, res) => {
         newUser = new ServiceProviderModel({
           fullName,
           phoneNumber,
-          zipCode,
+          address,
           email,
           password: await bcryptjs.hash(password, 10),
           role: "serviceprovider",
@@ -194,6 +194,7 @@ const Login = async (req, res) => {
     const responseData = {
       success: true,
       message: "Login successful",
+      token: token,
       user: {
         _id: user._id,
         role: user.role,

@@ -1,6 +1,6 @@
 import express from 'express';
 import { Getuser, GetUserCounts, getCustomerById, getServiceProviderById, updateServiceProvider, updateCustomer } from '../controllers/Admin.js';
-import { isAdmin } from '../middleware/verifyToken.js';
+import { isAdmin, verifyToken } from '../middleware/verifyToken.js';
 import {
   getPendingProviders,
   approveProvider,
@@ -8,7 +8,6 @@ import {
   deleteUser,
   deleteServiceProvider
 } from "../controllers/AdminController.js";
-import { verifyToken } from "../middleware/auth.js";
 
 const AdminRoutes = express.Router();
 

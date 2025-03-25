@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import './CustomerProfile.css';
 import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 const CustomerProfile = () => {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ const CustomerProfile = () => {
     FullName: '',
     Email: '',
     PhoneNumber: '',
-    ZipCode: ''
+    Address: ''
   });
 
   useEffect(() => {
@@ -31,7 +33,7 @@ const CustomerProfile = () => {
           FullName: userData.FullName || userData.fullName || '',
           Email: userData.Email || userData.email || '',
           PhoneNumber: userData.PhoneNumber || userData.phoneNumber || '',
-          ZipCode: userData.ZipCode || userData.zipCode || ''
+          Address: userData.Address || userData.address || ''
         });
 
         // Fetch the latest user data from the server
@@ -52,7 +54,7 @@ const CustomerProfile = () => {
             FullName: updatedUserData.FullName || updatedUserData.fullName || '',
             Email: updatedUserData.Email || updatedUserData.email || '',
             PhoneNumber: updatedUserData.PhoneNumber || updatedUserData.phoneNumber || '',
-            ZipCode: updatedUserData.ZipCode || updatedUserData.zipCode || ''
+            Address: updatedUserData.Address || updatedUserData.address || ''
           });
 
           // Update localStorage with the latest data
@@ -104,6 +106,10 @@ const CustomerProfile = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate('/home');
+  };
+
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
@@ -112,12 +118,7 @@ const CustomerProfile = () => {
     try {
       await axios.delete(
         `http://localhost:4000/api/auth/delete/${user._id}`,
-        { 
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        { withCredentials: true }
       );
       localStorage.removeItem('user');
       toast.success('Account deleted successfully');
@@ -128,128 +129,131 @@ const CustomerProfile = () => {
     }
   };
 
-  const handleGoBack = () => {
-    navigate(-1); // This will take the user to the previous page
-  };
-
   if (!user) {
-    return <div className="profile-container"><div className="profile-card">Loading...</div></div>;
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-card">
-        <div className="profile-header">
-          <button className="back-button" onClick={handleGoBack}>
-            <FaArrowLeft /> Back
-          </button>
-          <h2>My Profile</h2>
-        </div>
-        <div className="profile-content">
-          {!isEditing ? (
-            <div className="profile-info">
-              <div className="info-item">
-                <FaUser className="info-icon" />
-                <div>
+    <>
+      <Header />
+      <div className="profile-container">
+        <div className="profile-card">
+          <div className="profile-header">
+            <button className="back-button" onClick={handleGoBack}>
+              <FaArrowLeft />
+            </button>
+            <h2>My Profile</h2>
+          </div>
+          <div className="profile-content">
+            {!isEditing ? (
+              <div className="profile-info">
+                <div className="info-item">
+                  <FaUser className="info-icon" />
+                  <div>
+                    <label>Full Name</label>
+                    <p>{user.FullName || user.fullName}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <FaEnvelope className="info-icon" />
+                  <div>
+                    <label>Email</label>
+                    <p>{user.Email || user.email}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <FaPhone className="info-icon" />
+                  <div>
+                    <label>Phone Number</label>
+                    <p>{user.PhoneNumber || user.phoneNumber || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="info-item">
+                  <FaMapMarkerAlt className="info-icon" />
+                  <div>
+                    <label>Address</label>
+                    <p>{user.Address || user.address || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div className="profile-actions">
+                  <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                    Edit Profile
+                  </button>
+                  <button className="delete-btn" onClick={handleDelete}>
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleUpdate} className="edit-form">
+                <div className="form-group">
                   <label>Full Name</label>
-                  <p>{user.FullName || user.fullName}</p>
+                  <input
+                    type="text"
+                    name="FullName"
+                    value={formData.FullName}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
-              </div>
-              <div className="info-item">
-                <FaEnvelope className="info-icon" />
-                <div>
+                <div className="form-group">
                   <label>Email</label>
-                  <p>{user.Email || user.email}</p>
+                  <input
+                    type="email"
+                    name="Email"
+                    value={formData.Email}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
-              </div>
-              <div className="info-item">
-                <FaPhone className="info-icon" />
-                <div>
+                <div className="form-group">
                   <label>Phone Number</label>
-                  <p>{user.PhoneNumber || user.phoneNumber || 'Not provided'}</p>
+                  <input
+                    type="tel"
+                    name="PhoneNumber"
+                    value={formData.PhoneNumber}
+                    onChange={handleInputChange}
+                    placeholder="Enter your phone number"
+                    pattern="[0-9]{10}"
+                    title="Please enter a valid 10-digit phone number"
+                    required
+                  />
                 </div>
-              </div>
-              <div className="info-item">
-                <FaMapMarkerAlt className="info-icon" />
-                <div>
-                  <label>ZIP Code</label>
-                  <p>{user.ZipCode || user.zipCode || 'Not provided'}</p>
+                <div className="form-group">
+                  <label>Address</label>
+                  <input
+                    type="text"
+                    name="Address"
+                    value={formData.Address}
+                    onChange={handleInputChange}
+                    placeholder="Enter your address"
+                    required
+                  />
                 </div>
-              </div>
-              <div className="profile-actions">
-                <button className="edit-btn" onClick={() => setIsEditing(true)}>
-                  Edit Profile
-                </button>
-                <button className="delete-btn" onClick={handleDelete}>
-                  Delete Account
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleUpdate} className="edit-form">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  name="FullName"
-                  value={formData.FullName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  name="Email"
-                  value={formData.Email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input
-                  type="tel"
-                  name="PhoneNumber"
-                  value={formData.PhoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="Enter your phone number"
-                  pattern="[0-9]{10}"
-                  title="Please enter a valid 10-digit phone number"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>ZIP Code</label>
-                <input
-                  type="text"
-                  name="ZipCode"
-                  value={formData.ZipCode}
-                  onChange={handleInputChange}
-                  placeholder="Enter your ZIP code"
-                  pattern="[0-9]{5}"
-                  title="Please enter a valid 5-digit ZIP code"
-                  required
-                />
-              </div>
-              <div className="form-actions">
-                <button type="submit" className="save-btn">
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setIsEditing(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
+                <div className="form-actions">
+                  <button type="submit" className="save-btn">
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 };
 

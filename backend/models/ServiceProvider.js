@@ -22,7 +22,7 @@ const serviceProviderSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  zipCode: {
+  address: {
     type: String,
     required: true,
     trim: true
@@ -77,7 +77,7 @@ const serviceProviderSchema = new mongoose.Schema({
 
 // Add indexes for better query performance
 serviceProviderSchema.index({ serviceType: 1, verificationStatus: 1 });
-serviceProviderSchema.index({ zipCode: 1 });
+serviceProviderSchema.index({ address: 1 });
 
 const ServiceProvider = mongoose.model("ServiceProvider", serviceProviderSchema);
 

@@ -8,7 +8,7 @@ import { FaEye, FaEyeSlash, FaUser, FaPhone, FaMapMarkerAlt, FaEnvelope, FaLock,
 const Register = () => {
   const [FullName, setFullName] = useState("");
   const [PhoneNumber, setPhoneNumber] = useState("");
-  const [ZipCode, setZipCode] = useState("");
+  const [Address, setAddress] = useState("");
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [ConfirmPassword, setConfirmPassword] = useState("");
@@ -50,8 +50,8 @@ const Register = () => {
       return;
     }
 
-    if (!ZipCode.match(/^\d{5}$/)) {
-      toast.error("Please enter a valid 5-digit zip code!");
+    if (!Address.trim()) {
+      toast.error("Please enter your address!");
       setIsLoading(false);
       return;
     }
@@ -82,7 +82,7 @@ const Register = () => {
       const requestData = {
         fullName: FullName.trim(),
         phoneNumber: PhoneNumber.trim(),
-        zipCode: ZipCode.trim(),
+        address: Address.trim(),
         email: Email.trim().toLowerCase(),
         password: Password,
         confirmPassword: ConfirmPassword,
@@ -174,16 +174,16 @@ const Register = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="zipCode" className="input-label">
-                <FaMapMarkerAlt className="input-icon" /> Zip Code
+              <label htmlFor="address" className="input-label">
+                <FaMapMarkerAlt className="input-icon" /> Address
               </label>
               <input
-                id="zipCode"
+                id="address"
                 type="text"
-                placeholder="Enter your zip code"
+                placeholder="Enter your address"
                 className="input-field"
-                value={ZipCode}
-                onChange={(e) => setZipCode(e.target.value)}
+                value={Address}
+                onChange={(e) => setAddress(e.target.value)}
                 required
               />
             </div>

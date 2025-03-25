@@ -1,61 +1,51 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
+    ref: 'Customer',
     required: true
   },
-  serviceProviderId: {
+  providerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "ServiceProvider",
+    ref: 'ServiceProvider',
     required: true
   },
   serviceType: {
     type: String,
-    required: true,
-    enum: ["house cleaning", "electrician", "painting", "plumbing", "hvac services"]
+    required: true
   },
-  bookingDate: {
+  bookingDateTime: {
     type: Date,
-    required: true
-  },
-  bookingTime: {
-    type: String,
-    required: true
-  },
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String
+    required: true,
+    default: Date.now
   },
   status: {
     type: String,
-    enum: ["pending", "confirmed", "completed", "cancelled"],
-    default: "pending"
+    enum: ['pending', 'accepted', 'declined', 'completed', 'canceled'],
+    default: 'pending'
   },
   price: {
     type: Number,
-    required: true,
-    min: 0
+    required: true
+  },
+  isEmergency: {
+    type: Boolean,
+    default: false
   },
   notes: {
     type: String,
     trim: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
-}, { timestamps: true });
+}, {
+  timestamps: true
+});
 
-// Add indexes for better query performance
-bookingSchema.index({ customerId: 1, bookingDate: -1 });
-bookingSchema.index({ serviceProviderId: 1, bookingDate: -1 });
-bookingSchema.index({ status: 1 });
+// Add indexes for faster queries
+bookingSchema.index({ customerId: 1, status: 1 });
+bookingSchema.index({ providerId: 1, status: 1 });
+bookingSchema.index({ bookingDateTime: -1 });
 
-const Booking = mongoose.model("Booking", bookingSchema);
+const Booking = mongoose.model('Booking', bookingSchema);
 
-export default Booking;
+export default Booking; 

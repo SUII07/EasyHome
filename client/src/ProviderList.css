@@ -1,3 +1,351 @@
+.main-container {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-top: 64px; /* Height of the fixed header */
+}
+
+/* Main Header Styles */
+.main-header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.main-header .header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: #003864;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav-links a {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #003864;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #003864;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.user-profile svg {
+  font-size: 1.2rem;
+}
+
+.user-profile span {
+  font-weight: 500;
+}
+
+.logout-button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #003864;
+  background: none;
+  color: #003864;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background-color: #003864;
+  color: white;
+}
+
+/* Sub Header Styles */
+.sub-header {
+  background: white;
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+}
+
+.sub-header .header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sub-header h2 {
+  text-align: center;
+  margin: 0;
+  color: #003864;
+}
+
+.back-button {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  color: #007bff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.back-button:hover {
+  color: #0056b3;
+}
+
+.back-button svg {
+  font-size: 1.5rem;
+}
+
+.back-button span {
+  font-size: 0.95rem;
+}
+
+.provider-list-content {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.loading, .no-providers {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.provider-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.provider-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.provider-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+}
+
+.provider-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.provider-avatar svg {
+  width: 100%;
+  height: 100%;
+  color: #999;
+}
+
+.provider-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.provider-name {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.provider-price {
+  text-align: right;
+}
+
+.amount {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.duration {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.rating-icon {
+  color: #FFB800;
+}
+
+.provider-details {
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+}
+
+.detail-icon {
+  color: #666;
+  font-size: 1rem;
+  min-width: 1rem;
+}
+
+.detail-row span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.decline-button,
+.accept-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.decline-button {
+  background-color: #fff;
+  color: #DC2626;
+  border: 1px solid #DC2626;
+}
+
+.decline-button:hover {
+  background-color: #FEE2E2;
+}
+
+.accept-button {
+  background-color: #22C55E;
+  color: white;
+  border: 1px solid #22C55E;
+}
+
+.accept-button:hover:not(:disabled) {
+  background-color: #16A34A;
+}
+
+.accept-button:disabled {
+  background-color: #D1D5DB;
+  border-color: #D1D5DB;
+  cursor: not-allowed;
+}
+
+.view-details-button {
+  width: 100%;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: #2563EB;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.view-details-button:hover {
+  color: #1D4ED8;
+  text-decoration: underline;
+}
+
+.primary-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.primary-button:hover {
+  background-color: #1565c0;
+}
+
 .provider-list-container {
   max-width: 1200px;
   margin: 2rem auto;
@@ -20,19 +368,6 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
-}
-
-.provider-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.provider-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
 }
 
 .provider-header {
@@ -69,20 +404,6 @@
   color: #333;
 }
 
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.star-filled {
-  color: #ffd700;
-}
-
-.star-empty {
-  color: #ddd;
-}
-
 .rating span {
   margin-left: 0.5rem;
   color: #666;
@@ -113,12 +434,32 @@
 }
 
 .price-section {
-  margin: 1rem 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
 }
 
-.price-section h4 {
-  color: #003864;
-  margin-bottom: 0.5rem;
+.price-label {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.price-amount {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.price-unit {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
 }
 
 .negotiation-form {
@@ -136,22 +477,6 @@
 .negotiation-form small {
   color: #666;
   font-size: 0.8rem;
-}
-
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.action-buttons button {
-  padding: 0.75rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
 }
 
 .view-details-btn {
@@ -198,13 +523,14 @@
   background-color: #e0e0e0;
 }
 
+/* Responsive styles */
 @media (max-width: 768px) {
-  .providers-grid {
+  .provider-grid {
     grid-template-columns: 1fr;
   }
 
   .action-buttons {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .provider-card {
@@ -215,4 +541,144 @@
     width: 60px;
     height: 60px;
   }
+
+  .sub-header .header-content {
+    grid-template-columns: auto 1fr auto;
+    gap: 0.5rem;
+  }
+
+  .emergency-service-btn {
+    grid-column: auto;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sub-header .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .sub-header h1 {
+    font-size: 1.5rem;
+  }
+}
+
+.emergency-toggle {
+  padding: 1rem;
+  margin: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.emergency-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border: 2px solid #DC2626;
+  border-radius: 8px;
+  color: #DC2626;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.emergency-button svg {
+  font-size: 1.25rem;
+}
+
+.emergency-button.active {
+  background: #DC2626;
+  color: white;
+}
+
+.emergency-note {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  color: #991B1B;
+  font-size: 0.9rem;
+}
+
+.emergency-label {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: #FEF2F2;
+  border-radius: 50px;
+  color: #DC2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.accept-button.emergency {
+  background-color: #DC2626;
+  border-color: #DC2626;
+}
+
+.accept-button.emergency:hover:not(:disabled) {
+  background-color: #B91C1C;
+}
+
+.emergency-service-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background: white;
+  border: 1.5px solid #DC2626;
+  border-radius: 50px;
+  color: #DC2626;
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-left: auto; /* Push to the right */
+}
+
+.emergency-service-btn .emergency-icon {
+  font-size: 0.9rem;
+}
+
+.emergency-service-btn:hover {
+  background: #FEF2F2;
+}
+
+.emergency-service-btn.active {
+  background: #DC2626;
+  color: white;
+}
+
+.emergency-banner {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  margin: 1rem auto;
+  max-width: 1200px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #991B1B;
+}
+
+.emergency-banner svg {
+  font-size: 1.25rem;
+  color: #DC2626;
+  flex-shrink: 0;
+}
+
+.emergency-banner p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
 } 

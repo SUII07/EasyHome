@@ -9,7 +9,7 @@ const customerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  ZipCode: {
+  Address: {
     type: String,
     required: true,
   },

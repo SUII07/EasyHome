@@ -18,19 +18,34 @@ export const Getuser = async (req, res) => {
 
     let users;
     if (role === "customer") {
-      users = await CustomerModel.find(query);
+      users = await CustomerModel.find(query).select('-password');
     } else if (role === "serviceprovider") {
-      users = await ServiceProviderModel.find(query);
+      users = await ServiceProviderModel.find(query).select('-password');
     } else {
       // If no role specified, fetch both customers and service providers
       const [customers, serviceProviders] = await Promise.all([
-        CustomerModel.find(query),
-        ServiceProviderModel.find(query)
+        CustomerModel.find(query).select('-password'),
+        ServiceProviderModel.find(query).select('-password')
       ]);
       users = [...customers, ...serviceProviders];
     }
 
-    res.json({ users });
+    // Transform the data to ensure consistent field names
+    const transformedUsers = users.map(user => ({
+      _id: user._id,
+      FullName: user.FullName || user.fullName,
+      Email: user.Email || user.email,
+      PhoneNumber: user.PhoneNumber || user.phoneNumber,
+      Address: user.Address || user.address,
+      role: user.role || (role === "customer" ? "customer" : "serviceprovider"),
+      verificationStatus: user.verificationStatus || "approved",
+      createdAt: user.createdAt,
+      serviceType: user.serviceType,
+      price: user.price,
+      rating: user.rating
+    }));
+
+    res.json({ users: transformedUsers });
   } catch (error) {
     console.error("Error fetching users:", error);
     res.status(500).json({ message: "Error fetching users" });
