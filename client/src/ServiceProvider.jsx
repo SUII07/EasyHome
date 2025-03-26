@@ -5,16 +5,17 @@ import { toast } from 'react-hot-toast';
 import './ServiceProvider.css';
 import CustomerCard from './components/CustomerCard';
 import Sidebar from './components/Sidebar';
+import Bookings from './components/Bookings';
+import ServiceProviderProfile from './ServiceProviderProfile';
 
 const ServiceProvider = () => {
   const [provider, setProvider] = useState(null);
-  const [stats, setStats] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState('pending');
   const [bookingRequests, setBookingRequests] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState('dashboard');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -25,7 +26,13 @@ const ServiceProvider = () => {
     }
     fetchProviderDetails();
     fetchBookingRequests();
-  }, [navigate]);
+
+    // Set active section based on URL path
+    const path = location.pathname.split('/').pop();
+    if (path) {
+      setActiveSection(path);
+    }
+  }, [navigate, location]);
 
   const fetchProviderDetails = async () => {
     try {
@@ -60,40 +67,6 @@ const ServiceProvider = () => {
       }
     } catch (error) {
       console.error('Error fetching provider details:', error);
-      setError(error.message);
-    }
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-
-      const response = await fetch('http://localhost:4000/api/bookings/requests', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          navigate('/login');
-          throw new Error('Session expired. Please login again.');
-        }
-        throw new Error('HTTP error! Status: ' + response.status);
-      }
-
-      const data = await response.json();
-      setBookings(data.bookings || []);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -130,7 +103,8 @@ const ServiceProvider = () => {
 
       const data = await response.json();
       if (data.success) {
-        console.log('Fetched booking requests:', data.bookings); // Debug log
+        console.log('Booking requests received:', data.bookings);
+        // The API now returns bookings with populated customer details
         setBookingRequests(data.bookings);
       } else {
         setError(data.message || 'Failed to fetch booking requests');
@@ -213,6 +187,19 @@ const ServiceProvider = () => {
     }
   };
 
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'bookings':
+        return <Bookings activeSection={activeSection} />;
+      case 'dashboard':
+        return renderDashboard();
+      case 'profile':
+        return <ServiceProviderProfile />;
+      default:
+        return renderDashboard();
+    }
+  };
+
   const renderDashboard = () => (
     <div className="provider-dashboard">
       {/* Welcome Section */}
@@ -221,50 +208,27 @@ const ServiceProvider = () => {
         <p className="welcome-subtitle">Here's what's happening today</p>
       </div>
 
-      {/* Booking Management Section */}
+      {/* Booking Request Section */}
       <div className="dashboard-section">
         <div className="section-header">
-          <h2>Booking Management</h2>
-          <div className="status-filter">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="status-select"
-            >
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="completed">Completed</option>
-              <option value="canceled">Canceled</option>
-            </select>
-          </div>
+          <h2>Booking Request</h2>
         </div>
 
-        <div className="bookings-list">
-          {bookings.length > 0 ? (
-            bookings.map((booking) => (
-              <div key={booking._id} className="booking-card">
-                <div className="booking-info">
-                  <h3>{booking.customerName}</h3>
-                  <p className="service-type">{booking.serviceType}</p>
-                  <p className="booking-date">
-                    <FaCalendarAlt className="icon" />
-                    {new Date(booking.bookingDateTime).toLocaleString()}
-                  </p>
-                  <p className="hourly-rate">
-                    Hourly Rate: ${booking.hourlyRate}
-                  </p>
-                </div>
-                <div className="booking-status">
-                  <span className={`status-badge ${booking.status}`}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                  </span>
-                  {renderBookingActions(booking)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="no-data">No {selectedStatus} bookings found</p>
-          )}
+        <div className="booking-requests-section">
+          <h3>New Booking Requests</h3>
+          <div className="booking-requests-grid">
+            {bookingRequests.map(booking => (
+              <CustomerCard
+                key={booking._id}
+                bookingDetails={booking}
+                onAccept={() => handleBookingResponse(booking._id, 'accepted')}
+                onDecline={() => handleBookingResponse(booking._id, 'declined')}
+              />
+            ))}
+            {bookingRequests.length === 0 && (
+              <p className="no-data">No pending booking requests</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -272,11 +236,11 @@ const ServiceProvider = () => {
 
   return (
     <div className="service-provider-container">
-      <Sidebar />
+      <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       <main className="main-content">
         <header className="header">
           <div className="header-left">
-            <h1>Dashboard</h1>
+            <h1>{activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}</h1>
           </div>
           <div className="header-right">
             <div className="profile">
@@ -296,26 +260,7 @@ const ServiceProvider = () => {
             </button>
           </div>
         ) : (
-          <>
-            {bookingRequests && bookingRequests.length > 0 && (
-              <div className="booking-requests-section">
-                <h2>New Booking Requests</h2>
-                <div className="booking-requests-grid">
-                  {bookingRequests.map(booking => (
-                    <CustomerCard
-                      key={booking._id}
-                      customer={booking.customerDetails}
-                      bookingDetails={booking}
-                      onAccept={() => handleBookingResponse(booking._id, 'accepted')}
-                      onDecline={() => handleBookingResponse(booking._id, 'declined')}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {renderDashboard()}
-          </>
+          renderContent()
         )}
       </main>
     </div>

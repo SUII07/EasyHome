@@ -1,0 +1,268 @@
+.bookings-container {
+  padding: 2rem;
+  width: 100%;
+  background-color: #f8fafc;
+}
+
+.bookings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.bookings-header h2 {
+  font-size: 1.8rem;
+  color: #1e293b;
+  margin: 0;
+  font-weight: 600;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-select {
+  padding: 0.8rem 1.2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  min-width: 160px;
+  color: #1e293b;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.filter-select:hover {
+  border-color: #0066cc;
+}
+
+.filter-select:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Customer Card Styles */
+.customer-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #eef1f5;
+}
+
+.customer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.customer-info h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #1a1f36;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.service-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 1rem;
+  margin-top: 4px;
+}
+
+.service-type .icon {
+  color: #00a8e8;
+  font-size: 1.1rem;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.pending {
+  background-color: #fff8e1;
+  color: #f57c00;
+}
+
+.status-badge.accepted {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.declined {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  color: #4b5563;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.detail-row .icon {
+  color: #00a8e8;
+  font-size: 1.2rem;
+  min-width: 20px;
+}
+
+.detail-row.date {
+  color: #1a1f36;
+  font-weight: 500;
+}
+
+.detail-row.price {
+  color: #1a1f36;
+  font-weight: 500;
+}
+
+.detail-row.price .icon {
+  color: #2e7d32;
+}
+
+.card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.action-button.complete {
+  background-color: #0066cc;
+  color: white;
+}
+
+.action-button.complete:hover {
+  background-color: #0052a3;
+}
+
+.action-button.accept {
+  background-color: #2e7d32;
+  color: white;
+}
+
+.action-button.accept:hover {
+  background-color: #1b5e20;
+}
+
+.action-button.decline {
+  background-color: #c62828;
+  color: white;
+}
+
+.action-button.decline:hover {
+  background-color: #b71c1c;
+}
+
+.action-button .icon {
+  font-size: 1.1rem;
+}
+
+/* Remove hover transform effect */
+.customer-card:hover {
+  transform: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .customer-card {
+    padding: 20px;
+  }
+
+  .detail-row {
+    padding: 10px;
+  }
+
+  .action-button {
+    padding: 8px 16px;
+  }
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-dropdown {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+  min-width: 200px;
+}
+
+@media (max-width: 768px) {
+  .bookings-container {
+    padding: 1rem;
+  }
+
+  .bookings-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .bookings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-card {
+    padding: 1.25rem;
+  }
+} 

@@ -1,134 +1,229 @@
+.booking-requests-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 1rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.booking-requests-section h3 {
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.booking-requests-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
 .customer-card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #f0f0f0;
+  width: 100%;
+  height: fit-content;
 }
 
 .customer-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.12);
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-.customer-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.customer-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 1rem;
 }
 
 .customer-info h3 {
-  margin: 0;
-  color: #333;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
 }
 
-.emergency-badge {
-  background-color: #ff4d4d;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: bold;
+.service-type {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #718096;
+  font-size: 0.9rem;
 }
 
-.card-body {
-  margin-bottom: 20px;
+.service-type .icon {
+  color: #4a5568;
+}
+
+.customer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .detail-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  color: #666;
+  gap: 0.75rem;
+  color: #4a5568;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.detail-row:hover {
+  background-color: #f8fafc;
 }
 
 .detail-row .icon {
-  color: #00a8e8;
-  font-size: 1.1rem;
-}
-
-.detail-row p {
-  margin: 0;
-}
-
-.notes {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-}
-
-.notes p {
-  margin: 0;
-  color: #666;
+  color: #718096;
+  min-width: 1rem;
 }
 
 .card-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
 }
 
-.action-button {
+.accept-button, .decline-button {
   flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.action-button.accept {
-  background-color: #28a745;
+.accept-button {
+  background-color: #10b981;
   color: white;
+  border: none;
 }
 
-.action-button.accept:hover {
-  background-color: #218838;
+.accept-button:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
 }
 
-.action-button.decline {
-  background-color: #dc3545;
-  color: white;
+.decline-button {
+  background-color: #fff;
+  color: #ef4444;
+  border: 1px solid #ef4444;
 }
 
-.action-button.decline:hover {
-  background-color: #c82333;
+.decline-button:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+  transform: translateY(-1px);
 }
 
-@media (max-width: 768px) {
+.detail-row.price {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.detail-row.price .icon {
+  color: #10b981;
+}
+
+.detail-row.date {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .booking-requests-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .booking-requests-section {
+    padding: 1rem;
+  }
+
   .customer-card {
     padding: 1rem;
   }
 
-  .customer-header {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .customer-info {
-    text-align: center;
-  }
-
-  .action-buttons {
+  .card-actions {
     flex-direction: column;
   }
 
-  .accept-button,
-  .decline-button {
+  .accept-button, .decline-button {
     width: 100%;
   }
+}
+
+/* Status badge styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.accepted {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.completed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.canceled {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Price display styling */
+.detail-row.price {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.detail-row.price .icon {
+  color: #10b981;
+}
+
+/* Date display styling */
+.detail-row.date {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+/* Hover effects for interactive elements */
+.detail-row:hover {
+  background-color: #f8fafc;
+  border-radius: 6px;
+  padding: 0.5rem;
+  margin: -0.5rem;
+  transition: background-color 0.2s ease;
 } 

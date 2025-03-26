@@ -24,30 +24,14 @@ router.get('/requests', verifyToken, async (req, res) => {
       providerId: req.user.userId,
       status: 'pending'
     })
-    .populate('customerId', 'fullName address phoneNumber')
+    .populate('customerId', 'FullName Address PhoneNumber')
     .sort({ bookingDateTime: -1 });
 
     console.log('Found bookings:', bookings);
 
-    // Format the response
-    const formattedBookings = bookings.map(booking => ({
-      _id: booking._id,
-      customerDetails: {
-        name: booking.customerId.fullName,
-        address: booking.customerId.address,
-        phone: booking.customerId.phoneNumber
-      },
-      serviceType: booking.serviceType,
-      bookingDateTime: booking.bookingDateTime,
-      price: booking.price,
-      isEmergency: booking.isEmergency,
-      notes: booking.notes,
-      status: booking.status
-    }));
-
     res.json({
       success: true,
-      bookings: formattedBookings
+      bookings
     });
   } catch (error) {
     console.error('Error fetching booking requests:', error);
@@ -203,14 +187,35 @@ router.get('/', verifyToken, async (req, res) => {
       query.status = status;
     }
 
+    console.log('Fetching bookings with query:', query);
+
     const bookings = await Booking.find(query)
-      .populate('customerId', 'fullName address phoneNumber')
+      .populate({
+        path: 'customerId',
+        select: 'FullName Address PhoneNumber Email',
+        model: 'Customer'
+      })
       .populate('providerId', 'fullName price')
       .sort({ bookingDateTime: -1 });
 
+    console.log('Found bookings:', bookings);
+
+    // Transform the response to include flattened customer details
+    const transformedBookings = bookings.map(booking => {
+      const { customerId, ...rest } = booking.toObject();
+      return {
+        ...rest,
+        customerName: customerId?.FullName || 'Customer Name Unavailable',
+        customerAddress: customerId?.Address || 'No address available',
+        customerPhone: customerId?.PhoneNumber || 'No phone available',
+        customerEmail: customerId?.Email,
+        customerId: customerId?._id
+      };
+    });
+
     res.json({
       success: true,
-      bookings
+      bookings: transformedBookings
     });
   } catch (error) {
     console.error('Error fetching bookings:', error);
@@ -258,44 +263,67 @@ router.patch('/:id/status', verifyToken, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    console.log(`Updating booking ${id} to status: ${status}`);
+
+    // Validate status
+    const validStatuses = ['pending', 'accepted', 'declined', 'completed', 'canceled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status value'
+      });
+    }
+
     const booking = await Booking.findById(id);
     if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
     }
 
     // Verify user has permission to update this booking
-    if (req.user.role === 'customer' && booking.customerId.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-    if (req.user.role === 'serviceprovider' && booking.providerId.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Not authorized' });
+    if (booking.providerId.toString() !== req.user.userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this booking'
+      });
     }
 
     // Validate status transitions
     const validTransitions = {
-      customer: {
-        pending: ['canceled'],
-        accepted: ['canceled']
-      },
-      serviceprovider: {
-        pending: ['accepted', 'canceled'],
-        accepted: ['completed', 'canceled']
-      }
+      'pending': ['accepted', 'declined'],
+      'accepted': ['completed', 'canceled'],
+      'completed': [],
+      'declined': [],
+      'canceled': []
     };
 
-    const allowedTransitions = validTransitions[req.user.role] || {};
-    if (!allowedTransitions[booking.status]?.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status transition' });
+    if (!validTransitions[booking.status].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot transition from ${booking.status} to ${status}`
+      });
     }
 
     booking.status = status;
     booking.updatedAt = new Date();
     await booking.save();
 
-    res.json(booking);
+    console.log(`Successfully updated booking ${id} to status: ${status}`);
+
+    res.json({
+      success: true,
+      message: `Booking ${status} successfully`,
+      booking
+    });
   } catch (error) {
     console.error('Error updating booking status:', error);
-    res.status(500).json({ message: 'Error updating booking status' });
+    res.status(500).json({
+      success: false,
+      message: 'Error updating booking status',
+      error: error.message
+    });
   }
 });
 

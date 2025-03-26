@@ -5,9 +5,10 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import AuthRoutes from "./routes/Auth.js";
 import AdminRoutes from "./routes/AdminRoutes.js";
-import ServiceProviderRoutes from "./routes/serviceProviderController.js";
+import ServiceProviderRoutes from "./routes/serviceProviderRoutes.js";
 import CustomerRoutes from "./routes/CustomerRoutes.js";
 import bookingRoutes from './routes/bookingRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ mongoose.connect(process.env.MONGODB_URL)
     app.use("/api/serviceprovider", ServiceProviderRoutes);
     app.use("/api/customer", CustomerRoutes);
     app.use("/api/bookings", bookingRoutes);
+    app.use("/api/users", userRoutes);
 
     // Start the server
     const PORT = process.env.PORT || 4000;

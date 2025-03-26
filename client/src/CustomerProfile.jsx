@@ -22,7 +22,9 @@ const CustomerProfile = () => {
     const fetchUserData = async () => {
       try {
         const userData = JSON.parse(localStorage.getItem('user'));
-        if (!userData) {
+        const token = localStorage.getItem('token');
+
+        if (!userData || !token) {
           navigate('/login');
           return;
         }
@@ -39,10 +41,10 @@ const CustomerProfile = () => {
         // Fetch the latest user data from the server
         const response = await axios.get(
           `http://localhost:4000/api/auth/user/${userData._id}`,
-          { 
-            withCredentials: true,
+          {
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
             }
           }
         );
@@ -62,6 +64,13 @@ const CustomerProfile = () => {
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
+        if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again');
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
+        }
         // Don't show error toast if we already have user data from localStorage
         if (!user) {
           toast.error('Failed to load latest user data');
@@ -82,13 +91,20 @@ const CustomerProfile = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login again');
+        navigate('/login');
+        return;
+      }
+
       const response = await axios.put(
         `http://localhost:4000/api/auth/update/${user._id}`,
         formData,
-        { 
-          withCredentials: true,
+        {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -102,12 +118,15 @@ const CustomerProfile = () => {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
       toast.error(error.response?.data?.message || 'Failed to update profile');
     }
-  };
-
-  const handleGoBack = () => {
-    navigate('/home');
   };
 
   const handleDelete = async () => {
@@ -116,17 +135,40 @@ const CustomerProfile = () => {
     }
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login again');
+        navigate('/login');
+        return;
+      }
+
       await axios.delete(
         `http://localhost:4000/api/auth/delete/${user._id}`,
-        { withCredentials: true }
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
       toast.success('Account deleted successfully');
       navigate('/login');
     } catch (error) {
       console.error('Error deleting account:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
       toast.error(error.response?.data?.message || 'Failed to delete account');
     }
+  };
+
+  const handleGoBack = () => {
+    navigate('/home');
   };
 
   if (!user) {

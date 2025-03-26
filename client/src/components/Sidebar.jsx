@@ -1,89 +1,54 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaCalendarAlt, FaDollarSign, FaStar, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 import './Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ activeSection, onSectionChange }) => {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const handleLogout = async () => {
-    try {
-      await fetch('http://localhost:4000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      navigate('/login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+  const handleLogout = () => {
+    // Clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Show success message
+    toast.success('Logged out successfully');
+    
+    // Redirect to login page
+    navigate('/login');
   };
+
+  const menuItems = [
+    { id: 'dashboard', icon: <FaUserCircle />, label: 'Dashboard' },
+    { id: 'bookings', icon: <FaCalendarAlt />, label: 'Bookings' },
+    { id: 'earnings', icon: <FaDollarSign />, label: 'Earnings' },
+    { id: 'reviews', icon: <FaStar />, label: 'Reviews' },
+    { id: 'profile', icon: <FaUser />, label: 'Profile' },
+  ];
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
-        <h2 className="logo">EasyHome</h2>
-        <p className="provider-role">Service Provider</p>
+      <div className="logo">
+        <h2>EasyHome</h2>
+        <p>Service Provider</p>
       </div>
-      
-      <nav>
-        <ul>
-          <li className="nav-item">
-            <button 
-              onClick={() => navigate('/serviceprovider')}
-              className={`nav-link ${location.pathname === "/serviceprovider" ? "active" : ""}`}
-            >
-              <FaUserCircle className="icon" />
-              <span>Dashboard</span>
-            </button>
-          </li>
-          <li className="nav-item">
-            <button 
-              onClick={() => navigate('/serviceprovider/bookings')}
-              className={`nav-link ${location.pathname === "/serviceprovider/bookings" ? "active" : ""}`}
-            >
-              <FaCalendarAlt className="icon" />
-              <span>Bookings</span>
-            </button>
-          </li>
-          <li className="nav-item">
-            <button 
-              onClick={() => navigate('/serviceprovider/earnings')}
-              className={`nav-link ${location.pathname === "/serviceprovider/earnings" ? "active" : ""}`}
-            >
-              <FaDollarSign className="icon" />
-              <span>Earnings</span>
-            </button>
-          </li>
-          <li className="nav-item">
-            <button 
-              onClick={() => navigate('/serviceprovider/reviews')}
-              className={`nav-link ${location.pathname === "/serviceprovider/reviews" ? "active" : ""}`}
-            >
-              <FaStar className="icon" />
-              <span>Reviews</span>
-            </button>
-          </li>
-          <li className="nav-item">
-            <button 
-              onClick={() => navigate('/serviceprovider/profile')}
-              className={`nav-link ${location.pathname === "/serviceprovider/profile" ? "active" : ""}`}
-            >
-              <FaUser className="icon" />
-              <span>Profile</span>
-            </button>
-          </li>
-        </ul>
-      </nav>
-
-      <div className="sidebar-footer">
-        <button onClick={handleLogout} className="logout-button">
-          <FaSignOutAlt className="icon" />
+      <nav className="nav-menu">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            className={`nav-item ${activeSection === item.id ? 'active' : ''}`}
+            onClick={() => onSectionChange(item.id)}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+        <button className="nav-item logout" onClick={handleLogout}>
+          <FaSignOutAlt />
           <span>Logout</span>
         </button>
-      </div>
+      </nav>
     </aside>
   );
 };

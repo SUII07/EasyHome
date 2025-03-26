@@ -16,19 +16,32 @@ const ServiceProviderList = ({ serviceType }) => {
 
   const fetchProviders = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/serviceprovider/list?serviceType=${serviceType}`, {
-        credentials: 'include',
+      // Encode the service type for the URL
+      const encodedServiceType = encodeURIComponent(serviceType.toLowerCase());
+      
+      console.log('Fetching providers for:', serviceType);
+      
+      const response = await fetch(`http://localhost:4000/api/serviceprovider/${encodedServiceType}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
       const data = await response.json();
-      setProviders(data.providers);
+      console.log('Response data:', data);
+
+      if (response.ok && data.success) {
+        setProviders(data.providers);
+        if (data.providers.length === 0) {
+          toast.info(`No ${serviceType} providers available at the moment`);
+        }
+      } else {
+        throw new Error(data.message || 'Failed to fetch providers');
+      }
     } catch (error) {
       console.error('Error fetching providers:', error);
-      toast.error('Failed to load service providers');
+      toast.error(error.message || 'Failed to load service providers');
     } finally {
       setLoading(false);
     }
