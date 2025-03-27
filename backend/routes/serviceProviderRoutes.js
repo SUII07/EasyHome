@@ -34,8 +34,8 @@ router.get('/profile', verifyToken, async (req, res) => {
         serviceType: provider.serviceType,
         price: provider.price,
         rating: provider.rating,
-        ratingCount: provider.ratingCount,
-        isAvailable: provider.isAvailable
+        totalReviews: provider.totalReviews,
+        availability: provider.availability
       }
     });
   } catch (error) {
@@ -48,62 +48,103 @@ router.get('/profile', verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/serviceprovider/:serviceType - Get service providers by service type
-router.get('/:serviceType', async (req, res) => {
+// GET /api/serviceprovider/reviews - Get service provider reviews
+router.get('/reviews', verifyToken, async (req, res) => {
   try {
-    const { serviceType } = req.params;
+    console.log('Fetching reviews for provider:', req.user);
     
-    // Convert the serviceType to lowercase and handle URL encoding
-    const normalizedServiceType = decodeURIComponent(serviceType).toLowerCase().replace(/-/g, ' ');
-    
-    console.log('Fetching providers for service type:', normalizedServiceType);
-
-    // First, find all providers of this type to check if they exist
-    const allProvidersOfType = await ServiceProvider.find({
-      serviceType: normalizedServiceType
-    });
-
-    console.log('Total providers of this type (before filters):', allProvidersOfType.length);
-    
-    if (allProvidersOfType.length === 0) {
-      console.log('No providers found with service type:', normalizedServiceType);
-      console.log('Available service types in the system:', 
-        await ServiceProvider.distinct('serviceType'));
-    } else {
-      console.log('Provider verification status breakdown:',
-        allProvidersOfType.reduce((acc, provider) => {
-          acc[provider.verificationStatus] = (acc[provider.verificationStatus] || 0) + 1;
-          return acc;
-        }, {}));
+    // Verify user is a service provider
+    if (req.user.role !== 'serviceprovider') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Only service providers can access this endpoint.'
+      });
     }
 
-    // Now apply all filters
-    const providers = await ServiceProvider.find({
-      serviceType: normalizedServiceType,
-      verificationStatus: 'approved',
-      isVerified: true,
-      availability: true
-    });
+    const provider = await ServiceProvider.findById(req.user.userId);
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service provider not found'
+      });
+    }
 
-    console.log(`Found ${providers.length} approved and available providers`);
+    console.log('Found provider reviews:', provider.reviews);
 
     res.json({
       success: true,
-      providers: providers.map(provider => ({
+      reviews: provider.reviews
+    });
+  } catch (error) {
+    console.error('Error fetching service provider reviews:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching reviews',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/serviceprovider/details/:providerId - Get service provider details by ID
+router.get('/details/:providerId', async (req, res) => {
+  try {
+    const { providerId } = req.params;
+    const provider = await ServiceProvider.findById(providerId).select('-password');
+
+    if (!provider) {
+      return res.status(404).json({ success: false, message: "Service provider not found" });
+    }
+
+    res.json({ success: true, provider });
+  } catch (error) {
+    console.error("Error fetching provider details:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch provider details" });
+  }
+});
+
+// GET /api/serviceprovider/:serviceType - Get service providers by type
+router.get('/:serviceType', async (req, res) => {
+  try {
+    const { serviceType } = req.params;
+    const formattedServiceType = serviceType.toLowerCase().replace(/-/g, ' ');
+    console.log('Fetching providers for service type:', formattedServiceType);
+
+    // Find all providers of the specified type
+    const allProviders = await ServiceProvider.find({ 
+      serviceType: { $regex: new RegExp(formattedServiceType, 'i') },
+      verificationStatus: 'approved',
+      availability: true
+    });
+
+    console.log('Found providers:', allProviders.length);
+
+    if (allProviders.length === 0) {
+      // Get all available service types to help with debugging
+      const allServiceTypes = await ServiceProvider.distinct('serviceType');
+      console.log('Available service types in the system:', allServiceTypes);
+      
+      return res.json({
+        success: true,
+        providers: [],
+        message: `No available providers found for ${formattedServiceType}`
+      });
+    }
+
+    res.json({
+      success: true,
+      providers: allProviders.map(provider => ({
         _id: provider._id,
         fullName: provider.fullName,
         email: provider.email,
         phoneNumber: provider.phoneNumber,
         address: provider.address,
         serviceType: provider.serviceType,
-        price: provider.price,
-        averageRating: provider.averageRating,
-        totalReviews: provider.totalReviews,
+        price: provider.price || 0,
+        rating: provider.rating || 0,
+        totalReviews: provider.totalReviews || 0,
         experience: provider.experience,
-        description: provider.description,
-        verificationStatus: provider.verificationStatus,
-        isVerified: provider.isVerified,
-        availability: provider.availability
+        availability: provider.availability,
+        profileImage: provider.profileImage
       }))
     });
   } catch (error) {
@@ -112,53 +153,6 @@ router.get('/:serviceType', async (req, res) => {
       success: false,
       message: 'Error fetching service providers',
       error: error.message
-    });
-  }
-});
-
-// Update service provider profile
-router.put('/profile', verifyToken, async (req, res) => {
-  try {
-    // Verify user is a service provider
-    if (req.user.role !== 'serviceprovider') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Not a service provider.'
-      });
-    }
-
-    const { fullName, serviceType, price, experience, address, phoneNumber } = req.body;
-
-    const provider = await ServiceProvider.findByIdAndUpdate(
-      req.user.userId,
-      {
-        fullName,
-        serviceType,
-        price,
-        experience,
-        address,
-        phoneNumber
-      },
-      { new: true }
-    ).select('-password');
-
-    if (!provider) {
-      return res.status(404).json({
-        success: false,
-        message: 'Service provider not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      provider
-    });
-  } catch (error) {
-    console.error('Error updating service provider profile:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating service provider profile'
     });
   }
 });
@@ -211,19 +205,19 @@ router.post('/:id/rate', verifyToken, async (req, res) => {
     }
 
     // Check if the customer has already rated this booking
-    const existingRating = provider.ratings.find(
+    const existingReview = provider.reviews.find(
       r => r.bookingId.toString() === bookingId
     );
 
-    if (existingRating) {
+    if (existingReview) {
       return res.status(400).json({
         success: false,
         message: 'You have already rated this booking'
       });
     }
 
-    // Add the new rating with customer name
-    provider.ratings.push({
+    // Add the new review
+    provider.reviews.push({
       rating,
       review,
       customerId,
@@ -238,7 +232,7 @@ router.post('/:id/rate', verifyToken, async (req, res) => {
       console.error('Error saving provider:', saveError);
       return res.status(500).json({
         success: false,
-        message: 'Error saving rating',
+        message: 'Error saving review',
         error: saveError.message,
         details: saveError.errors
       });
@@ -247,34 +241,81 @@ router.post('/:id/rate', verifyToken, async (req, res) => {
     // Fetch the updated provider
     const updatedProvider = await ServiceProvider.findById(providerId);
 
-    console.log('Rating saved successfully:', {
+    console.log('Review saved successfully:', {
       providerId,
-      averageRating: provider.averageRating,
+      rating: provider.rating,
       totalReviews: provider.totalReviews
     });
 
-    // Get the latest rating
-    const latestRating = updatedProvider.ratings[updatedProvider.ratings.length - 1];
+    // Get the latest review
+    const latestReview = updatedProvider.reviews[updatedProvider.reviews.length - 1];
 
     res.json({
       success: true,
-      message: 'Rating submitted successfully',
+      message: 'Review submitted successfully',
       provider: {
-        averageRating: provider.averageRating,
+        rating: provider.rating,
         totalReviews: provider.totalReviews
       },
-      rating: {
-        ...latestRating.toObject(),
-        customerName: latestRating.customerName
+      review: {
+        ...latestReview.toObject(),
+        customerName: latestReview.customerName
       }
     });
   } catch (error) {
-    console.error('Error submitting rating:', error);
+    console.error('Error submitting review:', error);
     res.status(500).json({
       success: false,
-      message: 'Error submitting rating',
+      message: 'Error submitting review',
       error: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// Update service provider profile
+router.put('/profile', verifyToken, async (req, res) => {
+  try {
+    // Verify user is a service provider
+    if (req.user.role !== 'serviceprovider') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Not a service provider.'
+      });
+    }
+
+    const { fullName, serviceType, price, experience, address, phoneNumber } = req.body;
+
+    const provider = await ServiceProvider.findByIdAndUpdate(
+      req.user.userId,
+      {
+        fullName,
+        serviceType,
+        price,
+        experience,
+        address,
+        phoneNumber
+      },
+      { new: true }
+    ).select('-password');
+
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service provider not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      provider
+    });
+  } catch (error) {
+    console.error('Error updating service provider profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating service provider profile'
     });
   }
 });

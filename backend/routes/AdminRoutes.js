@@ -28,13 +28,13 @@ AdminRoutes.put('/serviceproviders/:id', isAdmin, updateServiceProvider);
 AdminRoutes.delete('/serviceproviders/:id', isAdmin, deleteServiceProvider);
 
 // Get pending service provider requests
-AdminRoutes.get("/pending-providers", verifyToken, getPendingProviders);
+AdminRoutes.get("/pending-providers", isAdmin, getPendingProviders);
 
 // Approve service provider
-AdminRoutes.patch("/approve-provider/:providerId", verifyToken, approveProvider);
+AdminRoutes.patch("/approve-provider/:providerId", isAdmin, approveProvider);
 
 // Reject service provider
-AdminRoutes.patch("/reject-provider/:providerId", verifyToken, rejectProvider);
+AdminRoutes.patch("/reject-provider/:providerId", isAdmin, rejectProvider);
 
 // Delete user (consolidated route)
 AdminRoutes.delete("/delete/:userId", isAdmin, deleteUser);

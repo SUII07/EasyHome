@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
+import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes, FaTools, FaMapMarkerAlt, FaPhone, FaRegClock, FaDollarSign } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import "./Admin.css";
 import axios from "axios";
@@ -12,7 +12,6 @@ const Admin = () => {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [notifications, setNotifications] = useState(3);
-  const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -21,6 +20,7 @@ const Admin = () => {
   const [isLoadingProviders, setIsLoadingProviders] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   // Fetch admin's name from localStorage on component mount
   useEffect(() => {
@@ -37,13 +37,13 @@ const Admin = () => {
   useEffect(() => {
     const path = location.pathname;
     if (path === "/admin/customers") {
-      fetchUsers("customer", search);
+      fetchUsers("customer", "");
     } else if (path === "/admin/serviceproviders") {
-      fetchUsers("serviceprovider", search);
+      fetchUsers("serviceprovider", "");
     } else {
       setUsers([]);
     }
-  }, [location.pathname, search]);
+  }, [location.pathname]);
 
   useEffect(() => {
     fetchPendingProviders();
@@ -52,20 +52,46 @@ const Admin = () => {
   const fetchUsers = async (role, search) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:4000/api/admin/getuser?role=${role}&search=${search}`,
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // Log the request parameters for debugging
+      console.log('Fetching users with params:', { role, search, sortBy, page });
+
+      const response = await axios.get(
+        `http://localhost:4000/api/admin/getuser`,
         {
-          credentials: "include",
+          params: {
+            role,
+            search: search || '',
+            sortBy,
+            page
+          },
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+
+      console.log('API Response:', response.data);
+
+      if (response.data) {
+        setUsers(response.data.users || []);
+        setTotalPages(Math.ceil((response.data.total || 0) / (response.data.limit || 10)));
+      } else {
+        console.error('No data received from API');
+        setUsers([]);
+        setTotalPages(1);
       }
-      const data = await response.json();
-      setUsers(data.users);
     } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to fetch users. Please try again.");
+      console.error("Error fetching users:", error.response || error);
+      toast.error(error.response?.data?.message || "Failed to fetch users. Please try again.");
+      setUsers([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -73,8 +99,17 @@ const Admin = () => {
 
   const fetchUserCounts = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       const response = await fetch("http://localhost:4000/api/admin/getusercounts", {
         credentials: "include",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -84,20 +119,41 @@ const Admin = () => {
       setServiceProviderCount(data.serviceProviderCount);
     } catch (error) {
       console.error("Error fetching user counts:", error);
-      toast.error("Failed to fetch user counts. Please try again.");
+      toast.error(error.message || "Failed to fetch user counts. Please try again.");
     }
   };
 
   const fetchPendingProviders = async () => {
     try {
       setIsLoadingProviders(true);
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      if (!user || user.role !== 'admin') {
+        throw new Error('User is not authorized');
+      }
+
       const response = await axios.get("http://localhost:4000/api/admin/pending-providers", {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
-      setPendingProviders(response.data.providers);
+      
+      if (response.data && response.data.providers) {
+        setPendingProviders(response.data.providers);
+      } else {
+        setPendingProviders([]);
+      }
     } catch (error) {
       console.error("Error fetching pending providers:", error);
-      toast.error("Failed to fetch pending providers");
+      toast.error(error.message || "Failed to fetch pending providers");
+      setPendingProviders([]);
     } finally {
       setIsLoadingProviders(false);
     }
@@ -149,53 +205,53 @@ const Admin = () => {
   };
 
   const handleSearchChange = (e) => {
-    setSearch(e.target.value);
+    const value = e.target.value;
+    setSearch(value);
+    setPage(1); // Reset to first page when searching
+
+    // Clear the previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set a new timeout to trigger the search after 500ms of no typing
+    const timeout = setTimeout(() => {
+      const path = location.pathname;
+      if (path === "/admin/customers") {
+        fetchUsers("customer", value);
+      } else if (path === "/admin/serviceproviders") {
+        fetchUsers("serviceprovider", value);
+      }
+    }, 500);
+
+    setSearchTimeout(timeout);
   };
 
-  const handleFilterChange = (e) => {
-    setFilterStatus(e.target.value);
-  };
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   const handleSortChange = (e) => {
-    setSortBy(e.target.value);
+    const value = e.target.value;
+    setSortBy(value);
+    setPage(1); // Reset to first page when changing sort
+
+    // Immediately fetch with new sort
+    const path = location.pathname;
+    if (path === "/admin/customers") {
+      fetchUsers("customer", search);
+    } else if (path === "/admin/serviceproviders") {
+      fetchUsers("serviceprovider", search);
+    }
   };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
-  };
-
-  const getFilteredUsers = () => {
-    let filtered = [...users];
-    
-    // Apply search filter
-    if (search) {
-      filtered = filtered.filter(user => 
-        user.FullName.toLowerCase().includes(search.toLowerCase()) ||
-        user.Email.toLowerCase().includes(search.toLowerCase()) ||
-        user.PhoneNumber.includes(search)
-      );
-    }
-    
-    // Apply status filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(user => user.status === filterStatus);
-    }
-    
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case "newest":
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        case "oldest":
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        case "name":
-          return a.FullName.localeCompare(b.FullName);
-        default:
-          return 0;
-      }
-    });
-    
-    return filtered;
   };
 
   const getCurrentPageTitle = () => {
@@ -276,31 +332,53 @@ const Admin = () => {
 
   const handleApproveProvider = async (providerId) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       await axios.patch(
         `http://localhost:4000/api/admin/approve-provider/${providerId}`,
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       toast.success("Service provider approved successfully");
       fetchPendingProviders();
     } catch (error) {
       console.error("Error approving provider:", error);
-      toast.error("Failed to approve provider");
+      toast.error(error.response?.data?.message || "Failed to approve provider");
     }
   };
 
   const handleRejectProvider = async (providerId) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
       await axios.patch(
         `http://localhost:4000/api/admin/reject-provider/${providerId}`,
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       toast.success("Service provider rejected successfully");
       fetchPendingProviders();
     } catch (error) {
       console.error("Error rejecting provider:", error);
-      toast.error("Failed to reject provider");
+      toast.error(error.response?.data?.message || "Failed to reject provider");
     }
   };
 
@@ -413,26 +491,50 @@ const Admin = () => {
               <div className="pending-providers-grid">
                 {pendingProviders.map((provider) => (
                   <div key={provider._id} className="pending-provider-card">
-                    <div className="provider-info">
-                      <h3>{provider.fullName}</h3>
-                      <p>Service Type: {provider.serviceType}</p>
-                      <p>Email: {provider.email}</p>
-                      <p>Phone: {provider.phoneNumber}</p>
-                      <p>Price: ${provider.price}</p>
-                      <p>Requested: {new Date(provider.createdAt).toLocaleDateString()}</p>
+                    <h3 className="provider-name">{provider.fullName}</h3>
+                    <div className="info-item">
+                      <FaTools className="icon" />
+                      <span className="info-value">
+                        <span className="service-type-badge">{provider.serviceType}</span>
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <FaMapMarkerAlt className="icon" />
+                      <span className="info-value">{provider.address || "Kathmandu"}</span>
+                    </div>
+                    <div className="info-item">
+                      <FaPhone className="icon" />
+                      <span className="info-value">{provider.phoneNumber}</span>
+                    </div>
+                    <div className="info-item">
+                      <FaRegClock className="icon" />
+                      <span className="info-value">
+                        {new Date(provider.createdAt).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <FaDollarSign className="icon" />
+                      <span className="info-value price-value">${provider.price}/hr</span>
                     </div>
                     <div className="provider-actions">
                       <button
                         className="approve-button"
                         onClick={() => handleApproveProvider(provider._id)}
                       >
-                        <FaCheck /> Approve
+                        Accept
                       </button>
                       <button
                         className="reject-button"
                         onClick={() => handleRejectProvider(provider._id)}
                       >
-                        <FaTimes /> Reject
+                        Decline
                       </button>
                     </div>
                   </div>
@@ -457,12 +559,6 @@ const Admin = () => {
                 />
               </div>
               <div className="filters">
-                <select value={filterStatus} onChange={handleFilterChange}>
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="pending">Pending</option>
-                </select>
                 <select value={sortBy} onChange={handleSortChange}>
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
@@ -489,7 +585,7 @@ const Admin = () => {
               </table>
             </div>
 
-            {getFilteredUsers().length > 0 && (
+            {users.length > 0 && (
               <div className="pagination">
                 <button 
                   onClick={() => handlePageChange(page - 1)}

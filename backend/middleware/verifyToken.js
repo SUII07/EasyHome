@@ -43,24 +43,49 @@ export const verifyToken = (req, res, next) => {
 };
 
 export const isAdmin = (req, res, next) => {
-  const token = req.cookies.token;
-  console.log("Token:", token); // Debugging
-  if (!token) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ message: "Unauthorized" });
+  try {
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. No token provided.'
+      });
     }
 
+    // Check if the header starts with 'Bearer '
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token format. Use Bearer token.'
+      });
+    }
+
+    // Extract the token
+    const token = authHeader.split(' ')[1];
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Check if user is admin
     if (decoded.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden" });
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin privileges required."
+      });
     }
 
+    // Add user info to request object
     req.user = decoded;
     next();
-  });
+  } catch (error) {
+    console.error('Admin verification error:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token.'
+    });
+  }
 };
   
 export const isServiceProvider = (req, res, next) => {

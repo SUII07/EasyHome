@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./Home.css";
 import { Link, useNavigate } from "react-router-dom";
-import { FaBroom, FaBolt, FaPaintRoller, FaWrench, FaSnowflake, FaArrowRight } from "react-icons/fa";
+import { FaBroom, FaBolt, FaPaintRoller, FaWrench, FaSnowflake, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { toast } from "react-hot-toast";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -14,8 +14,23 @@ const Home = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  const scrollToServices = (e) => {
+    if (e) e.preventDefault();
+    
+    const servicesSection = document.querySelector('.services');
+    if (servicesSection) {
+      const headerOffset = 80;
+      const elementPosition = servicesSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   useEffect(() => {
-    // Get user data from localStorage
     const userData = JSON.parse(localStorage.getItem('user'));
     if (userData) {
       setUser(userData);
@@ -33,6 +48,14 @@ const Home = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
+
+  useEffect(() => {
+    if (window.location.hash === '#services') {
+      setTimeout(() => {
+        scrollToServices();
+      }, 100);
+    }
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -92,44 +115,49 @@ const Home = () => {
     }
   ];
 
+  const features = [
+    "Verified Professional Service Providers",
+    "Flexible Scheduling Options",
+    "Competitive Pricing",
+    "100% Satisfaction Guarantee"
+  ];
+
   const howItWorks = [
     {
       title: "Find Service Providers",
-      description: "Browse through our verified service providers and find the perfect match for your needs.",
+      description: "Browse through our extensive network of verified and skilled service providers. Filter by service type, ratings, and availability to find your perfect match.",
       image: "./Service.png",
     },
     {
       title: "Book Services",
-      description: "Easily book services with just a few clicks and manage your appointments in one place.",
+      description: "Schedule your service with just a few clicks. Choose your preferred date and time, add any specific requirements, and confirm your booking instantly.",
       image: "./Book.png",
     },
     {
       title: "Get Quality Service",
-      description: "Receive high-quality services from our professional and experienced service providers.",
+      description: "Experience professional service delivery at your doorstep. Our verified providers ensure high-quality work and complete customer satisfaction.",
       image: "./Get.png",
     }
   ];
 
   return (
     <> 
-      <Header />
+      <Header onServicesClick={scrollToServices} />
       <div className="home-container">
         <header className="hero-section">
           <div className="hero-content">
             <h2>Professional Home Services at Your Fingertips</h2>
-            <p>Expert technicians, reliable service, and competitive pricing for all your home maintenance needs.</p>
-            <Link to="/Booking">
-              <button className="btn-primary">
-                Book a Service <FaArrowRight className="arrow-icon" />
-              </button>
-            </Link>
+            <p>Experience reliable and professional home services with our network of verified experts. Book your service today and enjoy peace of mind.</p>
+            <button className="btn-primary" onClick={scrollToServices}>
+              Book a Service <FaArrowRight className="arrow-icon" />
+            </button>
           </div>
           <div className="hero-image">
-            <img src="/HSP.png" alt="Home Service" />
+            <img src="/HSP.png" alt="Professional Home Services" />
           </div>
         </header>
 
-        <section className="services">
+        <section className="services" id="services">
           <h2>Our Services</h2>
           <p className="section-subtitle">Choose from our wide range of professional home services</p>
           <div className="services-grid">
@@ -150,7 +178,7 @@ const Home = () => {
 
         <section className="how-it-works">
           <h2>How it Works</h2>
-          <p className="section-subtitle">Simple steps to get the service you need</p>
+          <p className="section-subtitle">Get your home services done in three simple steps</p>
           <div className="how-grid">
             {howItWorks.map((step, index) => (
               <div key={index} className="how-step">

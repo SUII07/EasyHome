@@ -1,18 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
 import './Header.css';
+import { toast } from 'react-hot-toast';
 
-const Header = () => {
-  const navigate = useNavigate();
+const Header = ({ onServicesClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const user = JSON.parse(localStorage.getItem('user'));
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    navigate('/login');
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (userData) {
+      setUser(userData);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        localStorage.removeItem("user");
+        setUser(null);
+        toast.success("Logged out successfully");
+        navigate("/login");
+      } else {
+        throw new Error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
   };
 
   const toggleMenu = () => {
@@ -26,7 +49,7 @@ const Header = () => {
   };
 
   // Close profile dropdown when clicking outside
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = () => {
       setIsProfileOpen(false);
     };
@@ -53,7 +76,18 @@ const Header = () => {
         <ul className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
           <li><Link to="/home" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
           <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>About Us</Link></li>
-          <li><Link to="/services" onClick={() => setIsMenuOpen(false)}>Services</Link></li>
+          <li>
+            <a 
+              href="#services" 
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMenuOpen(false);
+                onServicesClick(e);
+              }}
+            >
+              Services
+            </a>
+          </li>
           <li className="user-profile-menu">
             <div 
               className={`profile-trigger ${isProfileOpen ? 'active' : ''}`}
@@ -62,7 +96,27 @@ const Header = () => {
               <FaUserCircle className="profile-icon" />
               <span>{user.FullName || user.fullName}</span>
               <div className={`profile-dropdown ${isProfileOpen ? 'show' : ''}`}>
-                <Link 
+                {user.role === 'admin' && <Link 
+                  to="/admin" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
+                    setIsProfileOpen(false);
+                  }}
+                >
+                  Dashboard
+                </Link>}
+                {user.role === 'serviceprovider' && <Link 
+                  to="/serviceprovider" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
+                    setIsProfileOpen(false);
+                  }}
+                >
+                  Dashboard
+                </Link>}
+                {user.role === 'customer' && <Link 
                   to="/profile" 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -71,8 +125,8 @@ const Header = () => {
                   }}
                 >
                   My Profile
-                </Link>
-                <Link 
+                </Link>}
+                {user.role === 'customer' && <Link 
                   to="/my-bookings" 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -81,7 +135,7 @@ const Header = () => {
                   }}
                 >
                   My Bookings
-                </Link>
+                </Link>}
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();

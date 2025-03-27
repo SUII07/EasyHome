@@ -46,7 +46,26 @@ const serviceProviderSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  ratings: [{
+  rating: {
+    type: Number,
+    min: 0,
+    max: 5,
+    default: 0
+  },
+  totalReviews: {
+    type: Number,
+    default: 0
+  },
+  experience: {
+    type: Number,
+    min: 0,
+    default: 0
+  },
+  availability: {
+    type: Boolean,
+    default: true
+  },
+  reviews: [{
     rating: {
       type: Number,
       min: 0,
@@ -77,29 +96,6 @@ const serviceProviderSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  averageRating: {
-    type: Number,
-    min: 0,
-    max: 5,
-    default: 0
-  },
-  totalReviews: {
-    type: Number,
-    default: 0
-  },
-  experience: {
-    type: Number,
-    min: 0,
-    default: 0
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  availability: {
-    type: Boolean,
-    default: true
-  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -108,10 +104,10 @@ const serviceProviderSchema = new mongoose.Schema({
 
 // Add a pre-save middleware to calculate average rating
 serviceProviderSchema.pre('save', function(next) {
-  if (this.ratings.length > 0) {
-    const sum = this.ratings.reduce((acc, curr) => acc + curr.rating, 0);
-    this.averageRating = sum / this.ratings.length;
-    this.totalReviews = this.ratings.length;
+  if (this.reviews.length > 0) {
+    const sum = this.reviews.reduce((acc, curr) => acc + curr.rating, 0);
+    this.rating = sum / this.reviews.length;
+    this.totalReviews = this.reviews.length;
   }
   next();
 });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaMapMarkerAlt, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
+import { FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
 import './Footer.css';
 
 const Footer = () => {
@@ -15,10 +15,18 @@ const Footer = () => {
               Your trusted partner for professional home services. Quality work, reliable service providers, and customer satisfaction guaranteed.
             </p>
             <div className="social-links">
-              <a href="#" className="social-icon" aria-label="Twitter"><FaTwitter /></a>
-              <a href="#" className="social-icon" aria-label="Facebook"><FaFacebook /></a>
-              <a href="#" className="social-icon" aria-label="Instagram"><FaInstagram /></a>
-              <a href="#" className="social-icon" aria-label="YouTube"><FaYoutube /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Twitter">
+                <FaTwitter />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
+                <FaFacebook />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
+                <FaInstagram />
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="YouTube">
+                <FaYoutube />
+              </a>
             </div>
           </div>
 
@@ -51,20 +59,22 @@ const Footer = () => {
             <h3>Contact Us</h3>
             <ul>
               <li>
-                <FaMapMarkerAlt />
-                <span>123 Service Street, City, State 12345</span>
+                <div className="contact-item">
+                  <FaMapMarkerAlt className="contact-icon" />
+                  <span>123 Service Street, City, State 12345</span>
+                </div>
               </li>
               <li>
-                <FaPhone />
-                <a href="tel:1-800-EASY-HOME">1-800-EASY-HOME</a>
+                <div className="contact-item">
+                  <FaPhone className="contact-icon" />
+                  <a href="tel:1-800-EASY-HOME">1-800-EASY-HOME</a>
+                </div>
               </li>
               <li>
-                <FaEnvelope />
-                <a href="mailto:support@easyhome.com">support@easyhome.com</a>
-              </li>
-              <li>
-                <FaClock />
-                <span>Mon - Sat: 8:00 AM - 7:00 PM</span>
+                <div className="contact-item">
+                  <FaEnvelope className="contact-icon" />
+                  <a href="mailto:support@easyhome.com">support@easyhome.com</a>
+                </div>
               </li>
             </ul>
           </div>
@@ -76,7 +86,9 @@ const Footer = () => {
           <p className="copyright">© {new Date().getFullYear()} EasyHome. All rights reserved.</p>
           <div className="footer-links">
             <Link to="/privacy">Privacy Policy</Link>
+            <span className="separator">•</span>
             <Link to="/terms">Terms of Service</Link>
+            <span className="separator">•</span>
             <Link to="/sitemap">Sitemap</Link>
           </div>
         </div>

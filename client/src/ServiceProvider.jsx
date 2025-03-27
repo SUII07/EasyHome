@@ -7,6 +7,7 @@ import CustomerCard from './components/CustomerCard';
 import Sidebar from './components/Sidebar';
 import Bookings from './components/Bookings';
 import ServiceProviderProfile from './ServiceProviderProfile';
+import Reviews from './components/Reviews';
 
 const ServiceProvider = () => {
   const [provider, setProvider] = useState(null);
@@ -195,6 +196,8 @@ const ServiceProvider = () => {
         return renderDashboard();
       case 'profile':
         return <ServiceProviderProfile />;
+      case 'reviews':
+        return <Reviews />;
       default:
         return renderDashboard();
     }
