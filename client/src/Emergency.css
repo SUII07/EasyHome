@@ -1,0 +1,412 @@
+.emergency-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.emergency-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.emergency-content h2 {
+  color: #DC2626;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.emergency-icon {
+  color: #ff4444;
+  margin-right: 8px;
+  font-size: 1.2em;
+}
+
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4B5563;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #DC2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1);
+}
+
+.address-hint {
+  color: #6B7280;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  padding: 0.5rem;
+  background: #FEF2F2;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+}
+
+.submit-btn {
+  background-color: #DC2626;
+  color: white;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #B91C1C;
+}
+
+.submit-btn:disabled {
+  background-color: #F87171;
+  cursor: not-allowed;
+}
+
+.close-btn {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background: none;
+  border: 1px solid #DC2626;
+  color: #DC2626;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #FEE2E2;
+}
+
+.providers-list {
+  margin-top: 1.5rem;
+}
+
+.providers-header {
+  margin-bottom: 1.5rem;
+}
+
+.providers-header h3 {
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.providers-count {
+  color: #4B5563;
+  font-size: 0.9rem;
+}
+
+.providers-grid {
+  display: grid;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.provider-card.emergency {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.provider-card.emergency:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.provider-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.provider-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F4F6;
+}
+
+.provider-info h4 {
+  margin: 0 0 0.5rem;
+  color: #1F2937;
+}
+
+.provider-address,
+.rating,
+.provider-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4B5563;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.provider-address {
+  color: #059669;
+}
+
+.star-icon {
+  color: #FBBF24;
+}
+
+.phone-icon {
+  color: #059669;
+}
+
+.price-info {
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: #F3F4F6;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-label {
+  color: #4B5563;
+  font-size: 0.9rem;
+}
+
+.price-amount {
+  color: #DC2626;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.price-note {
+  color: #6B7280;
+  font-size: 0.8rem;
+}
+
+.request-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #DC2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.request-btn:hover {
+  background-color: #B91C1C;
+}
+
+.no-providers {
+  text-align: center;
+  padding: 2rem;
+  color: #4B5563;
+}
+
+.warning-icon {
+  font-size: 2rem;
+  color: #DC2626;
+  margin-bottom: 1rem;
+}
+
+.no-providers .sub-text {
+  color: #6B7280;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0.5rem 0 1rem;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid #DC2626;
+  color: #DC2626;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #FEE2E2;
+}
+
+@media (max-width: 640px) {
+  .emergency-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+  
+  .provider-card.emergency {
+    padding: 0.75rem;
+  }
+  
+  .provider-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .price-info {
+    padding: 0.5rem;
+  }
+
+  .price-amount {
+    font-size: 1.1rem;
+  }
+}
+
+/* Service-specific colors */
+.emergency-service-btn.electrician {
+  background-color: #ffd700;
+}
+
+.emergency-service-btn.plumbing {
+  background-color: #4169e1;
+}
+
+.emergency-service-btn.hvac {
+  background-color: #32cd32;
+}
+
+.emergency-service-btn.house-cleaning {
+  background-color: #87ceeb;
+}
+
+.emergency-service-btn.painting {
+  background-color: #ff69b4;
+}
+
+/* Emergency service button base styles */
+.emergency-service-btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #ff4444;
+  color: white;
+  margin-left: 16px;
+}
+
+.emergency-service-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.emergency-service-btn .emergency-icon {
+  margin-right: 8px;
+  color: white;
+}
+
+/* Service-specific header colors */
+.emergency-content[data-service="electrician"] h2 {
+  color: #ffd700;
+}
+
+.emergency-content[data-service="plumbing"] h2 {
+  color: #4169e1;
+}
+
+.emergency-content[data-service="hvac-services"] h2 {
+  color: #32cd32;
+}
+
+.emergency-content[data-service="house-cleaning"] h2 {
+  color: #87ceeb;
+}
+
+.emergency-content[data-service="painting"] h2 {
+  color: #ff69b4;
+}
+
+/* Service-specific button colors */
+.submit-btn[data-service="electrician"] {
+  background-color: #ffd700;
+}
+
+.submit-btn[data-service="plumbing"] {
+  background-color: #4169e1;
+}
+
+.submit-btn[data-service="hvac-services"] {
+  background-color: #32cd32;
+}
+
+.submit-btn[data-service="house-cleaning"] {
+  background-color: #87ceeb;
+}
+
+.submit-btn[data-service="painting"] {
+  background-color: #ff69b4;
+}
+
+.request-btn[data-service="electrician"] {
+  background-color: #ffd700;
+}
+
+.request-btn[data-service="plumbing"] {
+  background-color: #4169e1;
+}
+
+.request-btn[data-service="hvac-services"] {
+  background-color: #32cd32;
+}
+
+.request-btn[data-service="house-cleaning"] {
+  background-color: #87ceeb;
+}
+
+.request-btn[data-service="painting"] {
+  background-color: #ff69b4;
+}

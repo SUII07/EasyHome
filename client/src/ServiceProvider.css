@@ -191,6 +191,19 @@ body {
   color: #4a5568;
 }
 
+.profile-icon.profile-image {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile span {
+  font-size: 0.95rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
 .loading-text {
   color: #718096;
   font-style: italic;
@@ -609,20 +622,85 @@ body {
 }
 
 .profile-avatar {
-  width: 120px;
-  height: 120px;
-  background: #fff;
+  position: relative;
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
+  background-color: #f0f0f0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
 }
 
-.profile-avatar svg {
-  font-size: 3.5rem;
-  color: #2196f3;
+.profile-avatar img.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar .image-upload {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-avatar:hover .image-upload {
+  opacity: 1;
+}
+
+.upload-label {
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.upload-label:hover {
+  text-decoration: underline;
+}
+
+.certificate-section {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+}
+
+.certificate-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.certificate-image {
+  max-width: 300px;
+  max-height: 200px;
+  object-fit: contain;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.no-certificate {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px dashed #ddd;
+}
+
+.no-certificate p {
+  margin-bottom: 10px;
+  color: #666;
 }
 
 .profile-info {
@@ -740,9 +818,47 @@ body {
 }
 
 .hourly-rate {
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #2e7d32;
-  font-size: 1.2rem;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hourly-rate::before {
+  content: '$';
+  font-size: 1.3rem;
+  color: #4a5568;
+}
+
+.hourly-rate::after {
+  content: '/hr';
+  font-size: 1rem;
+  color: #718096;
+  font-weight: normal;
+}
+
+.detail-item .detail-content input[type="number"].edit-input {
+  /* Add standard property first */
+  appearance: textfield;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  width: 120px;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+/* Remove spinner buttons from number input */
+.detail-item .detail-content input[type="number"].edit-input::-webkit-inner-spin-button,
+.detail-item .detail-content input[type="number"].edit-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
 }
 
 .edit-button,
@@ -1021,28 +1137,48 @@ body {
 .action-button {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-button.available {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.action-button.unavailable {
-  background: #fee2e2;
-  color: #991b1b;
+  transition: all 0.3s ease;
+  min-width: 140px;
 }
 
 .action-button:hover {
   transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-button.accept {
+  background: #4CAF50;
+  color: white;
+}
+
+.action-button.accept:hover {
+  background: #43A047;
+}
+
+.action-button.decline {
+  background: #f44336;
+  color: white;
+}
+
+.action-button.decline:hover {
+  background: #e53935;
+}
+
+.action-button.complete {
+  background: #4CAF50;
+  color: white;
+}
+
+.action-button.complete:hover {
+  background: #43A047;
 }
 
 /* Notifications */
@@ -1200,31 +1336,34 @@ body {
 }
 
 .status-badge {
-  padding: 0.25rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
   text-transform: capitalize;
-}
-
-.status-badge.pending {
-  background: #fef3c7;
-  color: #92400e;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .status-badge.accepted {
-  background: #dcfce7;
-  color: #166534;
+  background: #E8F5E9;
+  color: #2E7D32;
 }
 
 .status-badge.completed {
-  background: #dbeafe;
-  color: #1e40af;
+  background: #E8F5E9;
+  color: #2E7D32;
 }
 
-.status-badge.canceled {
-  background: #fee2e2;
-  color: #991b1b;
+.status-badge.pending {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.status-badge.declined {
+  background: #FFEBEE;
+  color: #C62828;
 }
 
 .booking-actions {

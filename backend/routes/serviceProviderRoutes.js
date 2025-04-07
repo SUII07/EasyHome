@@ -1,8 +1,18 @@
 import express from 'express';
 import { verifyToken } from '../middleware/verifyToken.js';
 import ServiceProvider from '../models/ServiceProvider.js';
+import cloudinary from '../config/cloudinary.js';
+import multer from 'multer';
 
 const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
 
 // GET /api/serviceprovider/profile - Get service provider profile
 router.get('/profile', verifyToken, async (req, res) => {
@@ -274,7 +284,10 @@ router.post('/:id/rate', verifyToken, async (req, res) => {
 });
 
 // Update service provider profile
-router.put('/profile', verifyToken, async (req, res) => {
+router.put('/profile', verifyToken, upload.fields([
+  { name: 'profilePicture', maxCount: 1 },
+  { name: 'certificate', maxCount: 1 }
+]), async (req, res) => {
   try {
     // Verify user is a service provider
     if (req.user.role !== 'serviceprovider') {
@@ -284,20 +297,11 @@ router.put('/profile', verifyToken, async (req, res) => {
       });
     }
 
-    const { fullName, serviceType, price, experience, address, phoneNumber } = req.body;
+    console.log('Received files:', req.files);
+    console.log('Received body:', req.body);
 
-    const provider = await ServiceProvider.findByIdAndUpdate(
-      req.user.userId,
-      {
-        fullName,
-        serviceType,
-        price,
-        experience,
-        address,
-        phoneNumber
-      },
-      { new: true }
-    ).select('-password');
+    const { fullName, email, phoneNumber, address, price } = req.body;
+    const provider = await ServiceProvider.findById(req.user.userId);
 
     if (!provider) {
       return res.status(404).json({
@@ -306,16 +310,102 @@ router.put('/profile', verifyToken, async (req, res) => {
       });
     }
 
+    // Handle profile picture upload
+    if (req.files && req.files['profilePicture']) {
+      try {
+        const profilePictureFile = req.files['profilePicture'][0];
+        const base64Data = profilePictureFile.buffer.toString('base64');
+        const contentType = profilePictureFile.mimetype;
+        
+        const uploadResponse = await cloudinary.uploader.upload(
+          `data:${contentType};base64,${base64Data}`,
+          {
+            folder: 'profile_pictures/service_providers/',
+            resource_type: 'auto'
+          }
+        );
+
+        // Delete old profile picture if exists
+        if (provider.profilePicture?.publicId) {
+          await cloudinary.uploader.destroy(provider.profilePicture.publicId);
+        }
+
+        provider.profilePicture = {
+          publicId: uploadResponse.public_id,
+          url: uploadResponse.secure_url
+        };
+      } catch (uploadError) {
+        console.error('Error uploading profile picture:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Error uploading profile picture'
+        });
+      }
+    }
+
+    // Handle certificate upload
+    if (req.files && req.files['certificate']) {
+      try {
+        const certificateFile = req.files['certificate'][0];
+        const base64Data = certificateFile.buffer.toString('base64');
+        const contentType = certificateFile.mimetype;
+
+        const uploadResponse = await cloudinary.uploader.upload(
+          `data:${contentType};base64,${base64Data}`,
+          {
+            folder: 'service_providers/certificates',
+            resource_type: 'auto'
+          }
+        );
+
+        // Delete old certificate if exists
+        if (provider.certificate?.publicId) {
+          await cloudinary.uploader.destroy(provider.certificate.publicId);
+        }
+
+        provider.certificate = {
+          publicId: uploadResponse.public_id,
+          url: uploadResponse.secure_url
+        };
+      } catch (uploadError) {
+        console.error('Error uploading certificate:', uploadError);
+        return res.status(500).json({
+          success: false,
+          message: 'Error uploading certificate'
+        });
+      }
+    }
+
+    // Update other fields
+    provider.fullName = fullName || provider.fullName;
+    provider.email = email || provider.email;
+    provider.phoneNumber = phoneNumber || provider.phoneNumber;
+    provider.address = address || provider.address;
+    provider.price = price ? Number(price) : provider.price;
+
+    await provider.save();
+
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      provider
+      provider: {
+        _id: provider._id,
+        fullName: provider.fullName,
+        email: provider.email,
+        phoneNumber: provider.phoneNumber,
+        address: provider.address,
+        serviceType: provider.serviceType,
+        price: provider.price,
+        profilePicture: provider.profilePicture,
+        certificate: provider.certificate
+      }
     });
   } catch (error) {
     console.error('Error updating service provider profile:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating service provider profile'
+      message: 'Error updating profile',
+      error: error.message
     });
   }
 });

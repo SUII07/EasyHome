@@ -23,21 +23,44 @@ export const verifyToken = (req, res, next) => {
     // Extract the token (remove 'Bearer ' from the header)
     const token = authHeader.split(' ')[1];
 
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Add user info to request object
-    req.user = {
-      userId: decoded.userId,
-      role: decoded.role
-    };
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access denied. No token provided.'
+      });
+    }
 
-    next();
+    try {
+      // Verify the token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Add user info to request object
+      req.user = {
+        userId: decoded.userId,
+        role: decoded.role
+      };
+
+      next();
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError);
+      
+      if (jwtError.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          message: 'Token has expired. Please login again.'
+        });
+      }
+      
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token. Please login again.'
+      });
+    }
   } catch (error) {
     console.error('Token verification error:', error);
     return res.status(401).json({
       success: false,
-      message: 'Invalid token.'
+      message: 'Authentication failed. Please login again.'
     });
   }
 };

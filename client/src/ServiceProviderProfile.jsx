@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTools, FaDollarSign, FaPencilAlt, FaTrash, FaSave, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTools, FaDollarSign, FaPencilAlt, FaTrash, FaSave, FaTimes, FaArrowLeft, FaFileAlt, FaImage } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import './ServiceProvider.css';
 
 export default function ServiceProviderProfile() {
@@ -17,69 +18,102 @@ export default function ServiceProviderProfile() {
     hourlyRate: '',
     description: ''
   });
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [certificate, setCertificate] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewCertificate, setPreviewCertificate] = useState(null);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      // Initialize state with stored user data including images
+      const initialData = {
+        fullName: user.fullName || '',
+        email: user.email || '',
+        phoneNumber: user.phoneNumber || '',
+        address: user.address || '',
+        serviceType: user.serviceType || '',
+        hourlyRate: user.price?.toString() || '0'
+      };
+      setFormData(initialData);
+      setProvider(user);
+      
+      // Set preview images if they exist in localStorage
+      if (user.profilePicture?.url) {
+        setPreviewImage(user.profilePicture.url);
+      }
+      if (user.certificate?.url) {
+        setPreviewCertificate(user.certificate.url);
+      }
+    }
     fetchProviderProfile();
   }, []);
 
   const fetchProviderProfile = async () => {
     try {
-      // Get the user data and token from localStorage
-      const user = JSON.parse(localStorage.getItem('user'));
       const token = localStorage.getItem('token');
-
-      if (!user || !token) {
+      if (!token) {
         toast.error('Please login again');
         navigate('/login');
         return;
       }
 
-      // Log the token for debugging
-      console.log('Token:', token);
-
-      const response = await fetch('http://localhost:4000/api/serviceprovider/profile', {
-        method: 'GET',
+      const response = await axios.get('http://localhost:4000/api/serviceprovider/profile', {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
+        }
       });
 
-      if (response.status === 401) {
+      if (response.data && response.data.success && response.data.provider) {
+        const providerData = response.data.provider;
+        
+        // Create normalized data for form
+        const normalizedData = {
+          fullName: providerData.fullName || '',
+          email: providerData.email || '',
+          phoneNumber: providerData.phoneNumber || '',
+          address: providerData.address || '',
+          serviceType: providerData.serviceType || '',
+          hourlyRate: providerData.price?.toString() || '0'
+        };
+
+        // Update component state
+        setProvider(providerData);
+        setFormData(normalizedData);
+
+        // Update preview images if they exist in the response
+        if (providerData.profilePicture?.url) {
+          setPreviewImage(providerData.profilePicture.url);
+        }
+        if (providerData.certificate?.url) {
+          setPreviewCertificate(providerData.certificate.url);
+        }
+
+        // Get current user data from localStorage
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        
+        // Merge new data with existing user data, preserving image data
+        const updatedUser = {
+          ...currentUser,
+          ...providerData,
+          // Ensure image data is preserved and updated
+          profilePicture: providerData.profilePicture || currentUser.profilePicture,
+          certificate: providerData.certificate || currentUser.certificate
+        };
+
+        // Update localStorage with merged data
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('Updated user data in localStorage:', updatedUser);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      if (error.response?.status === 401) {
         toast.error('Session expired. Please login again');
         localStorage.removeItem('user');
         localStorage.removeItem('token');
         navigate('/login');
         return;
       }
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Fetched provider data:', data); // Debug log
-
-      if (data && data.success && data.provider) {
-        // Normalize the data to ensure consistent case
-        const normalizedData = {
-          fullName: data.provider.fullName || data.provider.FullName || '',
-          email: data.provider.email || data.provider.Email || '',
-          phoneNumber: data.provider.phoneNumber || data.provider.PhoneNumber || '',
-          address: data.provider.address || data.provider.Address || '',
-          serviceType: data.provider.serviceType || data.provider.ServiceType || '',
-          hourlyRate: data.provider.price || data.provider.Price || '',
-          description: data.provider.description || data.provider.Description || ''
-        };
-
-        setProvider(normalizedData);
-        setFormData(normalizedData);
-      } else {
-        throw new Error('Failed to fetch profile data');
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
       toast.error('Failed to load profile: ' + error.message);
     }
   };
@@ -92,6 +126,32 @@ export default function ServiceProviderProfile() {
     }));
   };
 
+  const handleImageChange = (e, type) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Please upload a valid image file (JPEG, PNG)');
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size should be less than 5MB');
+        return;
+      }
+
+      if (type === 'profile') {
+        setProfilePicture(file);
+        setPreviewImage(URL.createObjectURL(file));
+      } else {
+        setCertificate(file);
+        setPreviewCertificate(URL.createObjectURL(file));
+      }
+    }
+  };
+
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -101,60 +161,83 @@ export default function ServiceProviderProfile() {
         return;
       }
 
-      // Convert hourlyRate to price for backend
-      const updateData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phoneNumber: formData.phoneNumber,
-        address: formData.address,
-        price: Number(formData.hourlyRate), // Convert to number
-        serviceType: provider.serviceType // Keep original service type
-      };
+      const formDataToSend = new FormData();
+      
+      // Append text data
+      formDataToSend.append('fullName', formData.fullName);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phoneNumber', formData.phoneNumber);
+      formDataToSend.append('address', formData.address);
+      formDataToSend.append('price', parseFloat(formData.hourlyRate));
 
-      const response = await fetch('http://localhost:4000/api/serviceprovider/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include',
-        body: JSON.stringify(updateData)
-      });
-
-      if (response.status === 401) {
-        toast.error('Session expired. Please login again');
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        navigate('/login');
-        return;
+      // Append files if they exist
+      if (profilePicture) {
+        formDataToSend.append('profilePicture', profilePicture);
+        console.log('Appending profile picture:', profilePicture);
+      }
+      if (certificate) {
+        formDataToSend.append('certificate', certificate);
+        console.log('Appending certificate:', certificate);
       }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update profile');
-      }
+      console.log('Sending form data:', Object.fromEntries(formDataToSend));
 
-      const updatedData = await response.json();
-      if (updatedData && updatedData.success && updatedData.provider) {
-        const normalizedData = {
-          fullName: updatedData.provider.fullName || '',
-          email: updatedData.provider.email || '',
-          phoneNumber: updatedData.provider.phoneNumber || '',
-          address: updatedData.provider.address || '',
-          serviceType: updatedData.provider.serviceType || '',
-          hourlyRate: updatedData.provider.price || '',
-          description: updatedData.provider.description || ''
+      const response = await axios.put(
+        'http://localhost:4000/api/serviceprovider/profile',
+        formDataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      if (response.data && response.data.success) {
+        const updatedProvider = response.data.provider;
+        
+        // Update component state
+        setProvider(updatedProvider);
+        setFormData({
+          ...formData,
+          fullName: updatedProvider.fullName,
+          email: updatedProvider.email,
+          phoneNumber: updatedProvider.phoneNumber,
+          address: updatedProvider.address,
+          hourlyRate: updatedProvider.price?.toString() || '0'
+        });
+
+        // Update preview images if they exist in the response
+        if (updatedProvider.profilePicture?.url) {
+          setPreviewImage(updatedProvider.profilePicture.url);
+        }
+        if (updatedProvider.certificate?.url) {
+          setPreviewCertificate(updatedProvider.certificate.url);
+        }
+
+        // Get current user data and merge with new data
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const updatedUser = {
+          ...currentUser,
+          ...updatedProvider,
+          profilePicture: updatedProvider.profilePicture || currentUser.profilePicture,
+          certificate: updatedProvider.certificate || currentUser.certificate
         };
-        setProvider(normalizedData);
-        setFormData(normalizedData);
+
+        // Update localStorage
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+
         setIsEditing(false);
         toast.success('Profile updated successfully');
-      } else {
-        throw new Error('Failed to update profile');
+
+        // Clean up file states
+        setProfilePicture(null);
+        setCertificate(null);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(error.message || 'Failed to update profile');
+      const errorMessage = error.response?.data?.message || 'Failed to update profile';
+      toast.error(errorMessage);
     }
   };
 
@@ -168,30 +251,18 @@ export default function ServiceProviderProfile() {
           return;
         }
 
-        const response = await fetch('http://localhost:4000/api/serviceprovider/profile', {
-          method: 'DELETE',
+        const response = await axios.delete('http://localhost:4000/api/serviceprovider/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
-          },
-          credentials: 'include'
+          }
         });
 
-        if (response.status === 401) {
-          toast.error('Session expired. Please login again');
+        if (response.data && response.data.success) {
           localStorage.removeItem('user');
           localStorage.removeItem('token');
+          toast.success('Account deleted successfully');
           navigate('/login');
-          return;
         }
-
-        if (!response.ok) {
-          throw new Error('Failed to delete account');
-        }
-
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        toast.success('Account deleted successfully');
-        navigate('/login');
       } catch (error) {
         console.error('Error deleting account:', error);
         toast.error('Failed to delete account');
@@ -217,7 +288,25 @@ export default function ServiceProviderProfile() {
       <div className="profile-content">
         <div className="profile-section">
           <div className="profile-avatar">
-            <FaUser />
+            {previewImage ? (
+              <img src={previewImage} alt="Profile" className="profile-image" />
+            ) : (
+              <FaUser />
+            )}
+            {isEditing && (
+              <div className="image-upload">
+                <label htmlFor="profilePicture" className="upload-label">
+                  <FaImage /> Change Photo
+                </label>
+                <input
+                  type="file"
+                  id="profilePicture"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e, 'profile')}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            )}
           </div>
           <div className="profile-info">
             <div className="info-header">
@@ -335,7 +424,7 @@ export default function ServiceProviderProfile() {
             <div className="detail-item">
               <div className="detail-header">
                 <FaDollarSign className="detail-icon" />
-                <label>Hourly Rate</label>
+                <label>HOURLY RATE</label>
               </div>
               <div className="detail-content">
                 {isEditing ? (
@@ -345,9 +434,57 @@ export default function ServiceProviderProfile() {
                     value={formData.hourlyRate}
                     onChange={handleInputChange}
                     className="edit-input"
+                    min="0"
+                    step="1"
                   />
                 ) : (
-                  <p className="hourly-rate">${provider.hourlyRate}/hr</p>
+                  <p className="hourly-rate">{provider?.price || 0}/hr</p>
+                )}
+              </div>
+            </div>
+
+            <div className="detail-item certificate-section">
+              <div className="detail-header">
+                <FaFileAlt className="detail-icon" />
+                <label>Certificate</label>
+              </div>
+              <div className="detail-content">
+                {previewCertificate ? (
+                  <div className="certificate-preview">
+                    <img src={previewCertificate} alt="Certificate" className="certificate-image" />
+                    {isEditing && (
+                      <div className="image-upload">
+                        <label htmlFor="certificate" className="upload-label">
+                          <FaFileAlt /> Change Certificate
+                        </label>
+                        <input
+                          type="file"
+                          id="certificate"
+                          accept="image/*"
+                          onChange={(e) => handleImageChange(e, 'certificate')}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="no-certificate">
+                    <p>No certificate uploaded</p>
+                    {isEditing && (
+                      <div className="image-upload">
+                        <label htmlFor="certificate" className="upload-label">
+                          <FaFileAlt /> Upload Certificate
+                        </label>
+                        <input
+                          type="file"
+                          id="certificate"
+                          accept="image/*"
+                          onChange={(e) => handleImageChange(e, 'certificate')}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

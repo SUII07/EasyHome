@@ -134,15 +134,26 @@ body {
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
-  background-color: #e9ecef;
-  border-radius: 50%;
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.avatar .profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-avatar-icon {
+  font-size: 3rem;
+  color: #cbd5e0;
 }
 
 .profile-info {
@@ -319,6 +330,23 @@ body {
   .detail-grid {
     grid-template-columns: 1fr;
   }
+
+  .avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .certificate-container {
+    padding: 1rem;
+  }
+
+  .certificate-image {
+    max-height: 300px;
+  }
+
+  .no-certificate {
+    padding: 2rem;
+  }
 }
 
 /* Error Container Styles */
@@ -333,4 +361,60 @@ body {
 .error-message {
   color: #dc3545;
   margin-bottom: 20px;
+}
+
+.certificate-container {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 1rem;
+}
+
+.certificate-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.certificate-image {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.certificate-image:hover {
+  transform: scale(1.02);
+}
+
+.certificate-caption {
+  color: #718096;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.no-certificate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  background: #fff;
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+}
+
+.no-certificate-icon {
+  font-size: 3rem;
+  color: #cbd5e0;
+}
+
+.no-certificate p {
+  color: #718096;
+  font-size: 1rem;
+  margin: 0;
 } 

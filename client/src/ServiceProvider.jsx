@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUserCircle, FaCalendarAlt, FaEnvelope, FaBell, FaCheck, FaTimes, FaDollarSign, FaStar, FaCog, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import './ServiceProvider.css';
 import CustomerCard from './components/CustomerCard';
 import Sidebar from './components/Sidebar';
@@ -25,6 +26,8 @@ const ServiceProvider = () => {
       navigate('/login');
       return;
     }
+    // Initialize provider state with localStorage data
+    setProvider(user);
     fetchProviderDetails();
     fetchBookingRequests();
 
@@ -43,31 +46,40 @@ const ServiceProvider = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/serviceprovider/profile', {
+      const response = await axios.get('http://localhost:4000/api/serviceprovider/profile', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          navigate('/login');
-          throw new Error('Session expired. Please login again.');
-        }
-        throw new Error('Failed to fetch provider details');
-      }
+      if (response.data && response.data.success) {
+        const providerData = response.data.provider;
+        
+        // Get current user data
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        
+        // Merge with new data, preserving existing image data
+        const updatedUser = {
+          ...currentUser,
+          ...providerData,
+          profilePicture: providerData.profilePicture || currentUser.profilePicture,
+          certificate: providerData.certificate || currentUser.certificate
+        };
 
-      const data = await response.json();
-      if (data.success) {
-        setProvider(data.provider);
+        // Update state and localStorage
+        setProvider(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('Updated provider data:', updatedUser);
       } else {
-        setError(data.message || 'Failed to fetch provider details');
+        setError('Failed to fetch provider details');
       }
     } catch (error) {
       console.error('Error fetching provider details:', error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      }
       setError(error.message);
     } finally {
       setLoading(false);
@@ -247,7 +259,23 @@ const ServiceProvider = () => {
           </div>
           <div className="header-right">
             <div className="profile">
-              <FaUserCircle className="profile-icon" />
+              {provider?.profilePicture?.url ? (
+                <img 
+                  src={provider.profilePicture.url} 
+                  alt="Profile" 
+                  className="profile-icon profile-image"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = null;
+                    e.target.className = "profile-icon";
+                    const icon = document.createElement('i');
+                    icon.className = "fas fa-user-circle profile-icon";
+                    e.target.parentElement.replaceChild(icon, e.target);
+                  }}
+                />
+              ) : (
+                <FaUserCircle className="profile-icon" />
+              )}
               <span>{provider?.fullName}</span>
             </div>
           </div>

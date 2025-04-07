@@ -3,6 +3,19 @@ import { verifyToken } from '../middleware/verifyToken.js';
 import Booking from '../models/Booking.js';
 import ServiceProvider from '../models/ServiceProvider.js';
 import Customer from '../models/Customer.js';
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+// Configure nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 const router = express.Router();
 
@@ -100,6 +113,39 @@ router.post('/request', verifyToken, async (req, res) => {
     const savedBooking = await booking.save();
     console.log('New booking created:', savedBooking);
 
+    // Send email notification to service provider
+    try {
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const emailHtml = `
+          <h2>New Booking Request</h2>
+          <p>You have received a new booking request.</p>
+          <h3>Booking Details:</h3>
+          <ul>
+            <li><strong>Service Type:</strong> ${serviceType}</li>
+            <li><strong>Customer Name:</strong> ${customer.FullName}</li>
+            <li><strong>Customer Phone:</strong> ${customer.PhoneNumber}</li>
+            <li><strong>Customer Address:</strong> ${customer.Address}</li>
+            <li><strong>Price:</strong> $${provider.price}/hr</li>
+            <li><strong>Notes:</strong> ${notes || 'No additional notes'}</li>
+          </ul>
+          <p>Please log in to your account to accept or decline this request.</p>
+        `;
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: provider.email,
+          subject: 'New Booking Request',
+          html: emailHtml
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Booking notification email sent to provider');
+      }
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Continue with the request even if email fails
+    }
+
     res.status(201).json({
       success: true,
       message: 'Booking request sent successfully',
@@ -142,13 +188,43 @@ router.put('/response/:bookingId', verifyToken, async (req, res) => {
       },
       { status },
       { new: true }
-    ).populate('customerId', 'fullName');
+    ).populate('customerId', 'FullName Email PhoneNumber');
 
     if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Booking not found or already processed'
       });
+    }
+
+    // Send email notification to customer
+    try {
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const emailHtml = `
+          <h2>Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)}</h2>
+          <p>Your booking request has been ${status}.</p>
+          <h3>Booking Details:</h3>
+          <ul>
+            <li><strong>Service Type:</strong> ${booking.serviceType}</li>
+            <li><strong>Status:</strong> ${status.charAt(0).toUpperCase() + status.slice(1)}</li>
+            <li><strong>Price:</strong> $${booking.price}/hr</li>
+          </ul>
+          <p>You can view the details of this booking in your account.</p>
+        `;
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: booking.customerId.Email,
+          subject: `Booking Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          html: emailHtml
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Booking response email sent to customer');
+      }
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Continue with the response even if email fails
     }
 
     const message = status === 'accepted' 

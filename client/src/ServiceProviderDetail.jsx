@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHistory, FaArrowLeft, FaEdit, FaTrash, FaSave, FaTimes, FaTools, FaStar, FaCheckCircle } from "react-icons/fa";
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHistory, FaArrowLeft, FaEdit, FaTrash, FaSave, FaTimes, FaTools, FaStar, FaCheckCircle, FaFileAlt } from "react-icons/fa";
 import "./ServiceProviderDetail.css";
 
 const ServiceProviderDetail = () => {
@@ -71,6 +71,12 @@ const ServiceProviderDetail = () => {
 
   const handleSave = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to update provider details');
+        return;
+      }
+
       // Create update payload with consistent field names
       const updatePayload = {
         fullName: editedProvider.fullName,
@@ -87,7 +93,13 @@ const ServiceProviderDetail = () => {
       const response = await axios.put(
         `http://localhost:4000/api/admin/serviceproviders/${id}`,
         updatePayload,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       
       if (response.data && response.data.provider) {
@@ -110,7 +122,12 @@ const ServiceProviderDetail = () => {
       }
     } catch (error) {
       console.error("Error updating provider:", error.response || error);
-      toast.error(error.response?.data?.message || "Failed to update provider details");
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || "Failed to update provider details");
+      }
     }
   };
 
@@ -208,7 +225,21 @@ const ServiceProviderDetail = () => {
 
         <div className="profile-header">
           <div className="avatar">
-            <FaUser />
+            {provider.profilePicture?.url ? (
+              <img 
+                src={provider.profilePicture.url} 
+                alt={`${provider.fullName}'s profile`}
+                className="profile-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = null;
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<FaUser className="default-avatar-icon" />';
+                }}
+              />
+            ) : (
+              <FaUser className="default-avatar-icon" />
+            )}
           </div>
           <div className="profile-info">
             <h2>
@@ -358,6 +389,28 @@ const ServiceProviderDetail = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="detail-section">
+          <h3>Certificate</h3>
+          <div className="certificate-container">
+            {provider.certificate?.url ? (
+              <div className="certificate-wrapper">
+                <img 
+                  src={provider.certificate.url} 
+                  alt="Service Provider Certificate" 
+                  className="certificate-image"
+                  onClick={() => window.open(provider.certificate.url, '_blank')}
+                />
+                <p className="certificate-caption">Click to view full certificate</p>
+              </div>
+            ) : (
+              <div className="no-certificate">
+                <FaFileAlt className="no-certificate-icon" />
+                <p>No certificate uploaded</p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -65,6 +65,14 @@ const serviceProviderSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  profilePicture: {
+    publicId: String,
+    url: String
+  },
+  certificate: {
+    publicId: String,
+    url: String
+  },
   reviews: [{
     rating: {
       type: Number,

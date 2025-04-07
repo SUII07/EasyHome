@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import ServiceProviderCard from "./ServiceProviderCard";
 import "./Booking.css";
+import { useNavigate } from "react-router-dom";
 
 const Booking = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const Booking = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [providers, setProviders] = useState([]);
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
@@ -56,20 +58,49 @@ const Booking = () => {
     }
     setIsLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      if (!token || !user) {
+        toast.error('Please login to book a service');
+        navigate('/login');
+        return;
+      }
+
+      if (user.role !== 'customer') {
+        toast.error('Only customers can book services');
+        return;
+      }
+
       const zipCode = formData.address.split(',').pop().trim();
-      const response = await axios.post("http://localhost:4000/api/booking/getProviders", {
-        serviceType: formData.serviceType,
-        zipCode
-      });
+      const response = await axios.post(
+        "http://localhost:4000/api/booking/getProviders",
+        {
+          serviceType: formData.serviceType,
+          zipCode
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
       
       if (response.data && response.data.success && response.data.providers.length > 0) {
         setProviders(response.data.providers);
+        toast.success(`Found ${response.data.providers.length} providers in your area`);
       } else {
         toast.error(response.data?.message || "No service providers found for the selected service in your area");
       }
     } catch (error) {
       console.error("Error fetching providers:", error);
-      toast.error(error.response?.data?.message || "Failed to fetch service providers. Please try again.");
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || "Failed to fetch service providers. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }

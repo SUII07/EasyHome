@@ -19,17 +19,35 @@ const CustomerDetail = () => {
 
   const fetchCustomerDetails = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to view customer details');
+        navigate('/login');
+        return;
+      }
+
       const response = await axios.get(
         `http://localhost:4000/api/admin/customers/${id}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       setCustomer(response.data.customer);
       setEditedCustomer(response.data.customer);
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching customer details:", error);
-      toast.error("Failed to fetch customer details");
-      navigate("/admin/customers");
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
+      } else {
+        toast.error("Failed to fetch customer details");
+        navigate("/admin/customers");
+      }
     }
   };
 
@@ -39,17 +57,35 @@ const CustomerDetail = () => {
 
   const handleSave = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to update customer details');
+        navigate('/login');
+        return;
+      }
+
       const response = await axios.put(
         `http://localhost:4000/api/admin/customers/${id}`,
         editedCustomer,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       setCustomer(response.data.customer);
       setIsEditing(false);
       toast.success("Customer details updated successfully");
     } catch (error) {
       console.error("Error updating customer:", error);
-      toast.error(error.response?.data?.message || "Failed to update customer details");
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || "Failed to update customer details");
+      }
     }
   };
 
@@ -64,15 +100,33 @@ const CustomerDetail = () => {
     }
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login to delete customer');
+        navigate('/login');
+        return;
+      }
+
       await axios.delete(
         `http://localhost:4000/api/admin/customers/${id}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
       toast.success("Customer deleted successfully");
       navigate("/admin/customers");
     } catch (error) {
       console.error("Error deleting customer:", error);
-      toast.error(error.response?.data?.message || "Failed to delete customer");
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.message || "Failed to delete customer");
+      }
     }
   };
 

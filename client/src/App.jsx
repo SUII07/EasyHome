@@ -7,7 +7,6 @@ import Register from "./Register";
 import Home from "./Home";
 import Admin from "./Admin";
 import Emergency from "./emergency";
-import Booking from "./Booking";
 import ServiceProvider from "./ServiceProvider"; 
 import CustomerDetail from "./CustomerDetail"; 
 import ServiceProviderDetail from "./ServiceProviderDetail"; 
@@ -16,16 +15,19 @@ import ProviderList from "./ProviderList";
 import CustomerProfile from './CustomerProfile';
 import ServiceProviderProfile from "./ServiceProviderProfile";
 import MyBookings from './pages/MyBookings';
+import Landing from './Landing';
 
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Toaster />
       <Routes>
+        {/* Landing Page Route */}
+        <Route path="/" element={<Landing />} />
+
         {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
-        <Route path="/" element={<Login />} />
 
         {/* Role-based Dashboard Routes */}
         <Route path="/admin/*" element={<Admin />} />
@@ -35,7 +37,6 @@ function App() {
 
         {/* Feature Routes */}
         <Route path="/emergency" element={<Emergency />} />
-        <Route path="/booking" element={<Booking />} />
         <Route path="/providers" element={<ProviderList />} />
         <Route path="/providers/:serviceType" element={<ProviderList />} />
 

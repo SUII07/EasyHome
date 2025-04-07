@@ -17,7 +17,8 @@ const Admin = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [adminName, setAdminName] = useState(""); // State to store admin's name
   const [pendingProviders, setPendingProviders] = useState([]);
-  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTimeout, setSearchTimeout] = useState(null);
@@ -46,8 +47,22 @@ const Admin = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    fetchPendingProviders();
-  }, []);
+    const checkAdminAuth = () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = localStorage.getItem('token');
+
+      if (!user || !token || user.role !== 'admin') {
+        toast.error('Access denied. Only administrators can access this page.');
+        navigate('/login');
+        return false;
+      }
+      return true;
+    };
+
+    if (checkAdminAuth()) {
+      fetchPendingProviders();
+    }
+  }, [navigate]);
 
   const fetchUsers = async (role, search) => {
     setIsLoading(true);
@@ -125,37 +140,55 @@ const Admin = () => {
 
   const fetchPendingProviders = async () => {
     try {
-      setIsLoadingProviders(true);
-      const user = JSON.parse(localStorage.getItem('user'));
+      setLoading(true);
+      setError(null);
+      
       const token = localStorage.getItem('token');
-
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error('Authentication token not found');
       }
 
-      if (!user || user.role !== 'admin') {
-        throw new Error('User is not authorized');
-      }
-
-      const response = await axios.get("http://localhost:4000/api/admin/pending-providers", {
-        withCredentials: true,
+      console.log('Fetching users with params:', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
-      
-      if (response.data && response.data.providers) {
+
+      const response = await axios.get(
+        'http://localhost:4000/api/admin/pending-providers',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
         setPendingProviders(response.data.providers);
       } else {
-        setPendingProviders([]);
+        throw new Error(response.data.message || 'Failed to fetch pending providers');
       }
     } catch (error) {
-      console.error("Error fetching pending providers:", error);
-      toast.error(error.message || "Failed to fetch pending providers");
-      setPendingProviders([]);
+      console.error('Error fetching pending providers:', error);
+      
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
+
+      if (error.response?.status === 403) {
+        toast.error('Access denied. Only administrators can access this resource.');
+        navigate('/login');
+        return;
+      }
+
+      setError(error.message || 'Failed to fetch pending providers');
+      toast.error(error.message || 'Failed to fetch pending providers');
     } finally {
-      setIsLoadingProviders(false);
+      setLoading(false);
     }
   };
 
@@ -330,57 +363,96 @@ const Admin = () => {
     ));
   };
 
-  const handleApproveProvider = async (providerId) => {
+  const handleApprove = async (providerId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error('Authentication token not found');
       }
 
-      await axios.patch(
+      const response = await axios.put(
         `http://localhost:4000/api/admin/approve-provider/${providerId}`,
         {},
         {
-          withCredentials: true,
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         }
       );
-      toast.success("Service provider approved successfully");
-      fetchPendingProviders();
+
+      if (response.data.success) {
+        toast.success('Service provider approved successfully');
+        fetchPendingProviders(); // Refresh the list
+      } else {
+        throw new Error(response.data.message || 'Failed to approve provider');
+      }
     } catch (error) {
-      console.error("Error approving provider:", error);
-      toast.error(error.response?.data?.message || "Failed to approve provider");
+      console.error('Error approving provider:', error);
+      toast.error(error.message || 'Failed to approve provider');
+      
+      if (error.response?.status === 401) {
+        navigate('/login');
+      }
     }
   };
 
-  const handleRejectProvider = async (providerId) => {
+  const handleReject = async (providerId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        throw new Error('No authentication token found');
+        throw new Error('Authentication token not found');
       }
 
-      await axios.patch(
+      const response = await axios.put(
         `http://localhost:4000/api/admin/reject-provider/${providerId}`,
         {},
         {
-          withCredentials: true,
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         }
       );
-      toast.success("Service provider rejected successfully");
-      fetchPendingProviders();
+
+      if (response.data.success) {
+        toast.success('Service provider rejected');
+        fetchPendingProviders(); // Refresh the list
+      } else {
+        throw new Error(response.data.message || 'Failed to reject provider');
+      }
     } catch (error) {
-      console.error("Error rejecting provider:", error);
-      toast.error(error.response?.data?.message || "Failed to reject provider");
+      console.error('Error rejecting provider:', error);
+      toast.error(error.message || 'Failed to reject provider');
+      
+      if (error.response?.status === 401) {
+        navigate('/login');
+      }
     }
   };
+
+  const handleViewDetails = (providerId) => {
+    navigate(`/admin/serviceprovider/${providerId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-container">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-container">
+        <div className="error-message">
+          {error}
+          <button onClick={fetchPendingProviders} className="retry-button">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard">
@@ -485,9 +557,7 @@ const Admin = () => {
         {location.pathname === "/admin" && (
           <section className="pending-providers-section">
             <h2>Pending Service Provider Requests</h2>
-            {isLoadingProviders ? (
-              <div className="loading">Loading pending providers...</div>
-            ) : pendingProviders.length > 0 ? (
+            {pendingProviders.length > 0 ? (
               <div className="pending-providers-grid">
                 {pendingProviders.map((provider) => (
                   <div key={provider._id} className="pending-provider-card">
@@ -526,13 +596,13 @@ const Admin = () => {
                     <div className="provider-actions">
                       <button
                         className="approve-button"
-                        onClick={() => handleApproveProvider(provider._id)}
+                        onClick={() => handleApprove(provider._id)}
                       >
                         Accept
                       </button>
                       <button
                         className="reject-button"
-                        onClick={() => handleRejectProvider(provider._id)}
+                        onClick={() => handleReject(provider._id)}
                       >
                         Decline
                       </button>

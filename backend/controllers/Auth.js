@@ -191,20 +191,33 @@ const Login = async (req, res) => {
       maxAge: 3600000, // 1 hour
     });
 
+    // Prepare user data for response
+    const userData = {
+      _id: user._id,
+      role: user.role,
+      fullName: user.fullName || user.FullName,
+      verificationStatus: user.verificationStatus || 'approved',
+      email: user.email || user.Email,
+      phoneNumber: user.phoneNumber || user.PhoneNumber,
+      address: user.address || user.Address
+    };
+
+    // Add service provider specific data
+    if (user.role === "serviceprovider") {
+      userData.serviceType = user.serviceType;
+      userData.price = user.price;
+      userData.rating = user.rating;
+      userData.totalReviews = user.totalReviews;
+      userData.availability = user.availability;
+      userData.profilePicture = user.profilePicture;
+      userData.certificate = user.certificate;
+    }
+
     const responseData = {
       success: true,
       message: "Login successful",
       token: token,
-      user: {
-        _id: user._id,
-        role: user.role,
-        fullName: user.fullName || user.FullName,
-        verificationStatus: user.verificationStatus || 'approved',
-        email: user.email || user.Email,
-        FullName: user.FullName,
-        verificationStatus: user.verificationStatus || 'approved',
-        Email: user.Email
-      }
+      user: userData
     };
 
     console.log("Login response sent:", responseData);

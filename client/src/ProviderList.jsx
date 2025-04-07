@@ -3,14 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { FaArrowLeft, FaTools, FaMapMarkerAlt, FaDollarSign, FaStar, FaUserCircle, FaPhone } from 'react-icons/fa';
+import { FaArrowLeft, FaTools, FaMapMarkerAlt, FaDollarSign, FaStar, FaUserCircle, FaPhone, FaExclamationTriangle } from 'react-icons/fa';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import "./ProviderList.css";
+import Emergency from './Emergency';
 
 const ProviderList = () => {
   const [providers, setProviders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const { serviceType } = useParams();
   const navigate = useNavigate();
 
@@ -20,6 +22,35 @@ const ProviderList = () => {
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
+  };
+
+  // Add service type specific configurations
+  const serviceConfig = {
+    electrician: {
+      emergencyButtonColor: '#ffd700',
+      emergencyText: 'Electrical Emergency'
+    },
+    plumbing: {
+      emergencyButtonColor: '#4169e1',
+      emergencyText: 'Plumbing Emergency'
+    },
+    'hvac-services': {
+      emergencyButtonColor: '#32cd32',
+      emergencyText: 'HVAC Emergency'
+    },
+    'house-cleaning': {
+      emergencyButtonColor: '#87ceeb',
+      emergencyText: 'Urgent Cleaning'
+    },
+    painting: {
+      emergencyButtonColor: '#ff69b4',
+      emergencyText: 'Urgent Painting'
+    }
+  };
+
+  const currentService = serviceConfig[serviceType] || {
+    emergencyButtonColor: '#ff4444',
+    emergencyText: `Emergency ${formatServiceType(serviceType)}`
   };
 
   const fetchProviders = async () => {
@@ -85,6 +116,7 @@ const ProviderList = () => {
         return;
       }
 
+      setIsLoading(true);
       const response = await axios.post(
         'http://localhost:4000/api/bookings/request',
         {
@@ -101,7 +133,7 @@ const ProviderList = () => {
       );
 
       if (response.data.success) {
-        toast.success('Booking request sent successfully!');
+        toast.success('Booking request sent successfully! Provider will be notified via email.');
         navigate('/home');
       } else {
         toast.error(response.data.message || 'Failed to send booking request');
@@ -111,14 +143,37 @@ const ProviderList = () => {
       if (error.response?.status === 403) {
         toast.error('Only customers can book services. Please login as a customer.');
         navigate('/login');
+      } else if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        navigate('/login');
       } else {
         toast.error(error.response?.data?.message || 'Failed to send booking request');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
     navigate('/home');
+  };
+
+  const handleEmergencyClick = () => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!token || !user) {
+      toast.error('Please login to access emergency services');
+      navigate('/login');
+      return;
+    }
+
+    if (user.role !== 'customer') {
+      toast.error('Only customers can request emergency services');
+      return;
+    }
+
+    setShowEmergencyModal(true);
   };
 
   return (
@@ -131,8 +186,23 @@ const ProviderList = () => {
               <FaArrowLeft />
             </button>
             <h2>{formatServiceType(serviceType)} Service Providers</h2>
+            <button 
+              className="emergency-service-btn"
+              onClick={handleEmergencyClick}
+              style={{ backgroundColor: currentService.emergencyButtonColor }}
+            >
+              <FaExclamationTriangle className="emergency-icon" />
+              {currentService.emergencyText}
+            </button>
           </div>
         </div>
+
+        {showEmergencyModal && (
+          <Emergency
+            serviceType={serviceType}
+            onClose={() => setShowEmergencyModal(false)}
+          />
+        )}
 
         <div className="provider-list-content">
           {isLoading ? (

@@ -26,10 +26,10 @@
 }
 
 .logo a {
-  color: #003864;
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-decoration: none;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
 }
 
 .menu-toggle {

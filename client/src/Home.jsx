@@ -125,17 +125,17 @@ const Home = () => {
   const howItWorks = [
     {
       title: "Find Service Providers",
-      description: "Browse through our extensive network of verified and skilled service providers. Filter by service type, ratings, and availability to find your perfect match.",
+      description: "Explore our extensive network of verified and skilled service providers. Use the dropdown search to easily find the right professional based on the service you need.",
       image: "./Service.png",
     },
     {
       title: "Book Services",
-      description: "Schedule your service with just a few clicks. Choose your preferred date and time, add any specific requirements, and confirm your booking instantly.",
+      description: "Booking a service is quick and easy. Browse through the list of available service providers, select the one that suits your needs, and send a booking request directly through the platform. The service provider will get back to you to confirm the details.",
       image: "./Book.png",
     },
     {
       title: "Get Quality Service",
-      description: "Experience professional service delivery at your doorstep. Our verified providers ensure high-quality work and complete customer satisfaction.",
+      description: "Enjoy reliable and professional service right at your doorstep. Our trusted and verified service providers come to your home and make sure the work is done properly. We focus on giving you quality service and making sure you're fully satisfied with the results.",
       image: "./Get.png",
     }
   ];
