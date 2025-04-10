@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FaCalendarAlt, FaTools, FaDollarSign, FaUser, FaMapMarkerAlt, FaPhone, FaFilter, FaStar, FaTimes } from 'react-icons/fa';
+import { FaCalendarAlt, FaTools, FaDollarSign, FaUser, FaMapMarkerAlt, FaPhone, FaFilter, FaStar, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import './MyBookings.css';
@@ -383,6 +383,9 @@ const MyBookings = () => {
     <div className="page-container">
       <Header />
       <main className="my-bookings-container">
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <FaArrowLeft />
+        </button>
         <div className="bookings-header">
           <h1>My Bookings</h1>
           <div className="filter-section">

@@ -16,6 +16,8 @@ import CustomerProfile from './CustomerProfile';
 import ServiceProviderProfile from "./ServiceProviderProfile";
 import MyBookings from './pages/MyBookings';
 import Landing from './Landing';
+import AdminProfile from './AdminProfile';
+import ProviderDetailView from './components/ProviderDetailView';
 
 function App() {
   return (
@@ -31,6 +33,7 @@ function App() {
 
         {/* Role-based Dashboard Routes */}
         <Route path="/admin/*" element={<Admin />} />
+        <Route path="/admin/profile" element={<AdminProfile />} />
         <Route path="/serviceprovider" element={<ServiceProvider />} />
         <Route path="/serviceprovider/profile" element={<ServiceProviderProfile />} />
         <Route path="/home" element={<Home />} />
@@ -39,6 +42,7 @@ function App() {
         <Route path="/emergency" element={<Emergency />} />
         <Route path="/providers" element={<ProviderList />} />
         <Route path="/providers/:serviceType" element={<ProviderList />} />
+        <Route path="/provider/:providerId" element={<ProviderDetailView />} />
 
         {/* Detail Routes */}
         <Route path="/admin/customers/:id" element={<CustomerDetail />} />

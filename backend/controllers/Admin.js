@@ -178,3 +178,76 @@ export const updateCustomer = async (req, res) => {
       .json({ message: "Error updating customer", error: error.message });
   }
 };
+
+// Get admin profile by ID
+export const getAdminProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the admin
+    const admin = await AdminModel.findById(id).select('-password');
+    if (!admin) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Admin not found" 
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      admin
+    });
+  } catch (error) {
+    console.error("Error fetching admin profile:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error fetching admin profile", 
+      error: error.message 
+    });
+  }
+};
+
+// Update admin profile
+export const updateAdminProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Find the admin
+    const admin = await AdminModel.findById(id);
+    if (!admin) {
+      return res.status(404).json({ 
+        success: false,
+        message: "Admin not found" 
+      });
+    }
+
+    // Update the admin's details
+    Object.keys(updates).forEach((key) => {
+      if (key !== "password" && key !== "role") {
+        // Don't update password or role through this endpoint
+        admin[key] = updates[key];
+      }
+    });
+
+    // Save the updated admin
+    const updatedAdmin = await admin.save();
+    
+    // Remove password from response
+    const adminResponse = updatedAdmin.toObject();
+    delete adminResponse.password;
+
+    res.status(200).json({
+      success: true,
+      message: "Admin profile updated successfully",
+      admin: adminResponse
+    });
+  } catch (error) {
+    console.error("Error updating admin profile:", error);
+    res.status(500).json({ 
+      success: false,
+      message: "Error updating admin profile", 
+      error: error.message 
+    });
+  }
+};

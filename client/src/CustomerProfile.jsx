@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import './CustomerProfile.css';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaArrowLeft, FaCamera } from 'react-icons/fa';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -11,6 +11,8 @@ const CustomerProfile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     FullName: '',
     Email: '',
@@ -171,6 +173,75 @@ const CustomerProfile = () => {
     navigate('/home');
   };
 
+  const handleProfilePictureClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size should be less than 5MB');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      const response = await axios.post(
+        `http://localhost:4000/api/customer/profile/upload-picture`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setUser(prev => ({
+          ...prev,
+          profilePicture: response.data.profilePicture
+        }));
+        
+        // Update local storage
+        const updatedUser = {
+          ...user,
+          profilePicture: response.data.profilePicture
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        toast.success('Profile picture updated successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        navigate('/login');
+        return;
+      }
+      toast.error(error.response?.data?.message || 'Failed to upload profile picture');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (!user) {
     return (
       <div className="loading-container">
@@ -192,6 +263,36 @@ const CustomerProfile = () => {
             <h2>My Profile</h2>
           </div>
           <div className="profile-content">
+            <div className="profile-image-section">
+              <div 
+                className="profile-image-container"
+                onClick={handleProfilePictureClick}
+              >
+                {user?.profilePicture?.url ? (
+                  <img 
+                    src={user.profilePicture.url} 
+                    alt="Profile" 
+                    className="profile-image"
+                  />
+                ) : (
+                  <div className="profile-image">
+                    <FaUser className="default-avatar" />
+                  </div>
+                )}
+                <div className="profile-image-overlay">
+                  <FaCamera className="camera-icon" />
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleProfilePictureChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+              {isUploading && <p className="uploading-text">Uploading...</p>}
+            </div>
+
             {!isEditing ? (
               <div className="profile-info">
                 <div className="info-item">

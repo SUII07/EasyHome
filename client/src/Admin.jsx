@@ -433,6 +433,10 @@ const Admin = () => {
     navigate(`/admin/serviceprovider/${providerId}`);
   };
 
+  const handleProfileClick = () => {
+    navigate('/admin/profile');
+  };
+
   if (loading) {
     return (
       <div className="admin-container">
@@ -522,9 +526,9 @@ const Admin = () => {
               <FaBell className="icon" />
               {notifications > 0 && <span className="notification-badge">{notifications}</span>}
             </div>
-            <div className="profile">
+            <div className="profile" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
               <FaUserCircle className="profile-icon" />
-              <span>Admin</span>
+              <span>{adminName || 'Admin'}</span>
             </div>
           </div>
         </header>

@@ -6,6 +6,7 @@
 }
 
 .my-bookings-container {
+  position: relative;
   flex: 1;
   padding: 2rem;
   max-width: 1200px;
@@ -213,7 +214,7 @@
 .status-badge {
   padding: 8px 16px;
   border-radius: 30px;
-  color: white;
+  color: #ffffff;
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -224,18 +225,22 @@
 
 .status-badge.pending {
   background: linear-gradient(45deg, #f0ad4e, #f4c37d);
+  color: #ffffff;
 }
 
 .status-badge.accepted {
   background: linear-gradient(45deg, #5cb85c, #80cc80);
+  color: #ffffff;
 }
 
 .status-badge.completed {
   background: linear-gradient(45deg, #0275d8, #2f96ff);
+  color: #ffffff;
 }
 
 .status-badge.declined {
   background: linear-gradient(45deg, #d9534f, #eb6b67);
+  color: #ffffff;
 }
 
 .booking-details {
@@ -579,4 +584,25 @@
 /* Remove the old rating display styles */
 .rating-display {
   display: none;
+}
+
+.back-button {
+  position: absolute;
+  top: 85px;
+  left: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: black;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 16px;
+  z-index: 1000;
+}
+
+.back-button svg {
+  width: 24px;
+  height: 24px;
 } 

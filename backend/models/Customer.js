@@ -27,6 +27,16 @@ const customerSchema = new mongoose.Schema({
     required: true,
     default: "customer",
   },
+  profilePicture: {
+    public_id: {
+      type: String,
+      default: "",
+    },
+    url: {
+      type: String,
+      default: "",
+    },
+  },
 }, { timestamps: true });
 
 const CustomerModel = mongoose.model('Customer', customerSchema);

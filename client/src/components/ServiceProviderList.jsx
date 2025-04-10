@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FaUserCircle, FaPhone, FaDollarSign, FaCalendarAlt } from 'react-icons/fa';
+import { FaUserCircle, FaPhone, FaDollarSign, FaCalendarAlt, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 import './ServiceProviderList.css';
 
 const ServiceProviderList = ({ serviceType }) => {
@@ -84,73 +84,103 @@ const ServiceProviderList = ({ serviceType }) => {
   };
 
   if (loading) {
-    return <div className="loading">Loading service providers...</div>;
+    return (
+      <div className="content-wrapper">
+        <div className="loading">Loading service providers...</div>
+      </div>
+    );
   }
 
   if (providers.length === 0) {
-    return <div className="no-providers">No service providers found for {serviceType}</div>;
+    return (
+      <div className="content-wrapper">
+        <div className="no-providers">No service providers found for {serviceType}</div>
+      </div>
+    );
   }
 
   return (
-    <div className="service-provider-list">
-      <h2>Available Service Providers - {serviceType}</h2>
-      <div className="providers-grid">
-        {providers.map((provider) => (
-          <div
-            key={provider._id}
-            className={`provider-card ${selectedProvider?._id === provider._id ? 'selected' : ''}`}
-            onClick={() => setSelectedProvider(provider)}
-          >
-            <div className="provider-avatar">
-              <FaUserCircle />
-            </div>
-            <div className="provider-info">
-              <h3>{provider.fullName}</h3>
-              <p className="provider-contact">
-                <FaPhone className="icon" />
-                {provider.phoneNumber}
-              </p>
-              <p className="provider-rate">
-                <FaDollarSign className="icon" />
-                ${provider.price}/hour
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {selectedProvider && (
-        <div className="booking-form-container">
-          <h3>Book {selectedProvider.fullName}</h3>
-          <form onSubmit={handleBooking} className="booking-form">
-            <div className="form-group">
-              <label htmlFor="bookingDateTime">
-                <FaCalendarAlt className="icon" />
-                Select Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                id="bookingDateTime"
-                value={bookingDateTime}
-                onChange={(e) => setBookingDateTime(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="notes">Additional Notes (Optional)</label>
-              <textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any special requirements or instructions..."
-              />
-            </div>
-            <button type="submit" className="submit-booking">
-              Send Booking Request
-            </button>
-          </form>
+    <div className="content-wrapper">
+      <div className="service-provider-list">
+        <div className="service-provider-header">
+          <h2>{serviceType} Service Providers</h2>
         </div>
-      )}
+        <div className="main-container">
+          <div className="providers-grid">
+            {providers.map((provider) => (
+              <div
+                key={provider._id}
+                className={`provider-card ${selectedProvider?._id === provider._id ? 'selected' : ''}`}
+                onClick={() => setSelectedProvider(provider)}
+              >
+                <div className="provider-header">
+                  <div className="provider-avatar">
+                    {provider.profilePicture?.url ? (
+                      <img src={provider.profilePicture.url} alt={provider.fullName} />
+                    ) : (
+                      <FaUserCircle />
+                    )}
+                  </div>
+                  <div className="provider-info">
+                    <h3>{provider.fullName}</h3>
+                    <div className="provider-rating">
+                      <FaStar className="icon" />
+                      <span>{provider.rating ? `${provider.rating.toFixed(1)} (${provider.totalReviews} reviews)` : 'No ratings'}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="provider-details">
+                  <p className="provider-contact">
+                    <FaPhone className="icon" />
+                    {provider.phoneNumber}
+                  </p>
+                  <p className="provider-location">
+                    <FaMapMarkerAlt className="icon" />
+                    {provider.address}
+                  </p>
+                  <p className="provider-rate">
+                    <FaDollarSign className="icon" />
+                    ${provider.price}/hour
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {selectedProvider && (
+            <div className="booking-form-container">
+              <h3>Book {selectedProvider.fullName}</h3>
+              <form onSubmit={handleBooking} className="booking-form">
+                <div className="form-group">
+                  <label htmlFor="bookingDateTime">
+                    <FaCalendarAlt className="icon" />
+                    Select Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="bookingDateTime"
+                    value={bookingDateTime}
+                    onChange={(e) => setBookingDateTime(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="notes">Additional Notes (Optional)</label>
+                  <textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any special requirements or instructions..."
+                  />
+                </div>
+                <button type="submit" className="submit-booking">
+                  Send Booking Request
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

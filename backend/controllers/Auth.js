@@ -3,6 +3,7 @@ import ServiceProviderModel from "../models/ServiceProvider.js";
 import AdminModel from "../models/admin.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import cloudinary from '../config/cloudinary.js';
 
 // Register function
 const register = async (req, res) => {
@@ -312,6 +313,65 @@ const deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ success: false, message: "Error deleting user" });
+  }
+};
+
+// Upload profile picture
+export const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+
+    // Get user ID from token
+    const userId = req.user.userId;
+    const customer = await CustomerModel.findById(userId);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found"
+      });
+    }
+
+    // Delete old profile picture from cloudinary if it exists
+    if (customer.profilePicture && customer.profilePicture.public_id) {
+      await cloudinary.uploader.destroy(customer.profilePicture.public_id);
+    }
+
+    // Convert buffer to base64
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+
+    // Upload to cloudinary
+    const result = await cloudinary.uploader.upload(dataURI, {
+      folder: "customer_profiles",
+      resource_type: "auto",
+    });
+
+    // Update customer profile with new image
+    customer.profilePicture = {
+      public_id: result.public_id,
+      url: result.secure_url,
+    };
+
+    await customer.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      profilePicture: customer.profilePicture
+    });
+  } catch (error) {
+    console.error("Error uploading profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error uploading profile picture",
+      error: error.message
+    });
   }
 };
 

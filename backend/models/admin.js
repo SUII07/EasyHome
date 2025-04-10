@@ -27,6 +27,16 @@ const adminSchema = new mongoose.Schema({
     required: true,
     default: "admin",
   },
+  profilePicture: {
+    public_id: {
+      type: String,
+      default: "",
+    },
+    url: {
+      type: String,
+      default: "",
+    },
+  },
 }, { timestamps: true });
 
 const adminModel = mongoose.model('admin', adminSchema);
