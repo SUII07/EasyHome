@@ -21,14 +21,52 @@
 }
 
 .customer-card {
-  background: #ffffff;
+  background: #fff;
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid #f0f0f0;
-  width: 100%;
-  height: fit-content;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.customer-card.emergency {
+  border: 2px solid #ff4444;
+  background: #fff9f9;
+}
+
+.emergency-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background: #ff4444;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.emergency-badge svg {
+  font-size: 1.1em;
+}
+
+.emergency-rate-note {
+  color: #ff4444;
+  font-size: 0.9em;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+.accept-button.emergency {
+  background-color: #ff4444;
+}
+
+.accept-button.emergency:hover {
+  background-color: #ff2020;
 }
 
 .customer-card:hover {
@@ -173,35 +211,51 @@
 }
 
 /* Status badge styles */
-.status-badge {
+.customer-status-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: fit-content;
+  margin-left: auto;
+}
+
+.customer-status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: capitalize;
 }
 
-.status-badge.pending {
-  background-color: #fef3c7;
-  color: #92400e;
+.customer-status-badge.pending {
+  background: #ffdb4d;
+  color: white;
+  border: 1px solid #ffe0b2;
 }
 
-.status-badge.accepted {
-  background-color: #dcfce7;
-  color: #166534;
+.customer-status-badge.accepted {
+  background: #70f17b;
+  color: white;
+  border: 1px solid #c8e6c9;
 }
 
-.status-badge.completed {
-  background-color: #dbeafe;
-  color: #1e40af;
+.customer-status-badge.completed {
+  background: #53aceb;
+  color: white;
+  border: 1px solid #bbdefb;
 }
 
-.status-badge.canceled {
-  background-color: #fee2e2;
-  color: #991b1b;
+.customer-status-badge.declined {
+  background: red;
+  color: white;
+  border: 1px solid #ffcdd2;
 }
+
+.customer-status-badge.pending, .customer-status-badge.accepted, .customer-status-badge.completed, .customer-status-badge.declined {
+  margin-top: 40px;
+ }
 
 /* Price display styling */
 .detail-row.price {

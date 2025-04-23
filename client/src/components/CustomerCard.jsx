@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaMapMarkerAlt, FaPhone, FaCalendarAlt, FaTools, FaDollarSign, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaPhone, FaCalendarAlt, FaTools, FaDollarSign, FaCheck, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
 import './CustomerCard.css';
 
 const CustomerCard = ({ customer, bookingDetails, onAccept, onDecline }) => {
@@ -9,10 +9,15 @@ const CustomerCard = ({ customer, bookingDetails, onAccept, onDecline }) => {
 
   // Get customer details from the populated customerId field
   const customerDetails = bookingDetails.customerId || {};
-  console.log('Customer Details:', customerDetails); // Add this for debugging
+  console.log('Customer Details:', customerDetails);
+  
+  // Handle both capitalized and lowercase field names
+  const customerName = customerDetails.fullName || customerDetails.FullName || 'Customer Name Unavailable';
+  const customerPhone = customerDetails.phoneNumber || customerDetails.PhoneNumber || 'No phone available';
+  const customerAddress = bookingDetails.address || customerDetails.address || customerDetails.Address || 'No address available';
   
   // Format the date
-  const formattedDate = new Date(bookingDetails.bookingDateTime).toLocaleString('en-US', {
+  const formattedDate = new Date(bookingDetails.bookingDateTime || bookingDetails.createdAt).toLocaleString('en-US', {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -22,25 +27,36 @@ const CustomerCard = ({ customer, bookingDetails, onAccept, onDecline }) => {
   });
 
   return (
-    <div className="customer-card">
+    <div className={`customer-card ${bookingDetails.isEmergency ? 'emergency' : ''}`}>
+      {bookingDetails.isEmergency && (
+        <div className="emergency-badge">
+          <FaExclamationTriangle />
+          Emergency Request
+        </div>
+      )}
       <div className="customer-header">
         <div className="customer-info">
-          <h3>{customerDetails.FullName || 'Customer Name Unavailable'}</h3>
+          <h3>{customerName}</h3>
           <div className="service-type">
             <FaTools className="icon" />
             <span>{bookingDetails.serviceType}</span>
           </div>
         </div>
+        <div className="customer-status-section">
+          <span className={`customer-status-badge ${bookingDetails.status || 'pending'}`}>
+            {(bookingDetails.status || 'pending').charAt(0).toUpperCase() + (bookingDetails.status || 'pending').slice(1)}
+          </span>
+        </div>
       </div>
 
       <div className="customer-details">
         <div className="detail-row">
-          <FaMapMarkerAlt className="icon" />
-          <span>{customerDetails.Address || 'No address available'}</span>
+          <span className="detail-label">Address:</span>
+          <span className="detail-value">{customerAddress}</span>
         </div>
         <div className="detail-row">
           <FaPhone className="icon" />
-          <span>{customerDetails.PhoneNumber || 'No phone available'}</span>
+          <span>{customerPhone}</span>
         </div>
         <div className="detail-row date">
           <FaCalendarAlt className="icon" />
@@ -48,7 +64,10 @@ const CustomerCard = ({ customer, bookingDetails, onAccept, onDecline }) => {
         </div>
         <div className="detail-row price">
           <FaDollarSign className="icon" />
-          <span>${bookingDetails.price || 0}/hr</span>
+          <span>{bookingDetails.price}</span>
+          {bookingDetails.isEmergency && (
+            <span className="emergency-rate-note">Emergency Rate</span>
+          )}
         </div>
       </div>
 
@@ -57,9 +76,9 @@ const CustomerCard = ({ customer, bookingDetails, onAccept, onDecline }) => {
           <FaTimes />
           <span>Decline</span>
         </button>
-        <button className="accept-button" onClick={onAccept}>
+        <button className={`accept-button ${bookingDetails.isEmergency ? 'emergency' : ''}`} onClick={onAccept}>
           <FaCheck />
-          <span>Accept</span>
+          <span>{bookingDetails.isEmergency ? 'Accept Emergency' : 'Accept'}</span>
         </button>
       </div>
     </div>

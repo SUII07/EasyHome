@@ -88,49 +88,85 @@ const ServiceProvider = () => {
 
   const fetchBookingRequests = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/bookings/requests', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      console.log('Fetching requests with token:', token.substring(0, 20) + '...');
 
-      if (!response.ok) {
-        if (response.status === 401) {
+      const [bookingsResponse, emergencyResponse] = await Promise.all([
+        fetch('http://localhost:4000/api/bookings/requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('http://localhost:4000/api/emergency/provider-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      ]);
+
+      console.log('Bookings Response Status:', bookingsResponse.status);
+      console.log('Emergency Response Status:', emergencyResponse.status);
+
+      if (!bookingsResponse.ok || !emergencyResponse.ok) {
+        // Log detailed error information
+        const bookingsError = await bookingsResponse.text().catch(() => 'No error details');
+        const emergencyError = await emergencyResponse.text().catch(() => 'No error details');
+        
+        console.error('Bookings Error:', bookingsError);
+        console.error('Emergency Error:', emergencyError);
+
+        if (bookingsResponse.status === 401 || emergencyResponse.status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           navigate('/login');
           throw new Error('Session expired. Please login again.');
         }
-        if (response.status === 403) {
+        if (bookingsResponse.status === 403 || emergencyResponse.status === 403) {
           throw new Error('Access denied. Only service providers can view booking requests.');
         }
-        throw new Error('Failed to fetch booking requests');
+        throw new Error(`Failed to fetch requests. Bookings: ${bookingsResponse.status}, Emergency: ${emergencyResponse.status}`);
       }
 
-      const data = await response.json();
-      if (data.success) {
-        console.log('Booking requests received:', data.bookings);
-        // The API now returns bookings with populated customer details
-        setBookingRequests(data.bookings);
-      } else {
-        setError(data.message || 'Failed to fetch booking requests');
-      }
+      const [bookingsData, emergencyData] = await Promise.all([
+        bookingsResponse.json(),
+        emergencyResponse.json()
+      ]);
+
+      // Combine and format both types of requests
+      const normalBookings = bookingsData.success ? bookingsData.bookings : [];
+      const emergencyBookings = emergencyData.success ? 
+        emergencyData.requests
+          .filter(req => req.status === 'pending') // Only include pending emergency requests
+          .map(req => ({
+            ...req,
+            isEmergency: true,
+            price: req.price || 0
+          })) : [];
+
+      // Combine both types of requests and sort by creation date
+      const allRequests = [...normalBookings, ...emergencyBookings].sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      console.log('All booking requests:', allRequests);
+      setBookingRequests(allRequests);
     } catch (error) {
-      console.error('Error fetching booking requests:', error);
+      console.error('Error fetching requests:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBookingResponse = async (bookingId, status) => {
+  const handleBookingResponse = async (bookingId, status, isEmergency = false) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -138,32 +174,42 @@ const ServiceProvider = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:4000/api/bookings/response/${bookingId}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status })
+      const endpoint = isEmergency
+        ? `http://localhost:4000/api/emergency/response/${bookingId}`
+        : `http://localhost:4000/api/bookings/response/${bookingId}`;
+
+      console.log('Sending response:', {
+        endpoint,
+        bookingId,
+        status,
+        isEmergency
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to process booking response');
-      }
+      const response = await axios.put(
+        endpoint,
+        { status },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      const data = await response.json();
-      if (data.success) {
-        toast.success(data.message);
+      if (response.data.success) {
+        toast.success(response.data.message);
         // Remove the responded booking from the list
         setBookingRequests(prevRequests => 
           prevRequests.filter(booking => booking._id !== bookingId)
         );
+        // Refresh the booking requests to ensure the list is up to date
+        fetchBookingRequests();
       } else {
-        toast.error(data.message || 'Failed to process booking response');
+        toast.error(response.data.message || 'Failed to process request');
       }
     } catch (error) {
-      console.error('Error responding to booking:', error);
-      toast.error('Failed to process booking response');
+      console.error('Error responding to request:', error);
+      toast.error(error.response?.data?.message || 'Failed to process request');
     }
   };
 
@@ -226,7 +272,7 @@ const ServiceProvider = () => {
       {/* Booking Request Section */}
       <div className="dashboard-section">
         <div className="section-header">
-          <h2>Booking Request</h2>
+          <h2>Booking Requests</h2>
         </div>
 
         <div className="booking-requests-section">
@@ -235,9 +281,13 @@ const ServiceProvider = () => {
             {bookingRequests.map(booking => (
               <CustomerCard
                 key={booking._id}
-                bookingDetails={booking}
-                onAccept={() => handleBookingResponse(booking._id, 'accepted')}
-                onDecline={() => handleBookingResponse(booking._id, 'declined')}
+                bookingDetails={{
+                  ...booking,
+                  isEmergency: booking.isEmergency || false,
+                  price: booking.isEmergency ? `${booking.price}/hr (Emergency Rate)` : `${booking.price}/hr`
+                }}
+                onAccept={() => handleBookingResponse(booking._id, 'accepted', booking.isEmergency)}
+                onDecline={() => handleBookingResponse(booking._id, 'declined', booking.isEmergency)}
               />
             ))}
             {bookingRequests.length === 0 && (

@@ -71,6 +71,29 @@ const ServiceProviderDetail = () => {
 
   const handleSave = async () => {
     try {
+      // Validation rules
+      const phoneRegex = /^\d{10}$/;
+      const nameRegex = /^[a-zA-Z\s]+$/;
+      const emailRegex = /@gmail\.com$/;
+
+      // Validate phone number
+      if (!phoneRegex.test(editedProvider.phoneNumber)) {
+        toast.error('Phone number must be exactly 10 digits');
+        return;
+      }
+
+      // Validate name
+      if (!nameRegex.test(editedProvider.fullName)) {
+        toast.error('Name must contain only letters and spaces');
+        return;
+      }
+
+      // Validate email
+      if (!emailRegex.test(editedProvider.email)) {
+        toast.error('Email must be a valid Gmail address');
+        return;
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         toast.error('Please login to update provider details');

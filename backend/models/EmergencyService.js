@@ -21,7 +21,7 @@ const emergencyServiceSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'rejected', 'completed'],
+    enum: ['pending', 'accepted', 'declined', 'completed'],
     default: 'pending'
   },
   isEmergency: {

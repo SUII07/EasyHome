@@ -30,7 +30,7 @@ const serviceProviderSchema = new mongoose.Schema({
   serviceType: {
     type: String,
     required: true,
-    enum: ["house cleaning", "electrician", "painting", "plumbing", "hvac services"]
+    enum: ["house cleaning", "electrician", "painting", "plumbing", "hvac services", "carpentry"]
   },
   price: {
     type: Number,
@@ -41,6 +41,12 @@ const serviceProviderSchema = new mongoose.Schema({
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending"
+  },
+  verificationDocument: {
+    publicId: String,
+    url: String,
+    originalName: String,
+    mimeType: String
   },
   isVerified: {
     type: Boolean,
@@ -117,6 +123,12 @@ serviceProviderSchema.pre('save', function(next) {
     this.rating = sum / this.reviews.length;
     this.totalReviews = this.reviews.length;
   }
+  next();
+});
+
+// Add a pre-save middleware to update isVerified based on verificationStatus
+serviceProviderSchema.pre('save', function(next) {
+  this.isVerified = this.verificationStatus === 'approved';
   next();
 });
 

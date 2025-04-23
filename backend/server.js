@@ -8,7 +8,6 @@ import AdminRoutes from "./routes/AdminRoutes.js";
 import ServiceProviderRoutes from "./routes/serviceProviderRoutes.js";
 import CustomerRoutes from "./routes/CustomerRoutes.js";
 import bookingRoutes from './routes/bookingRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 import emergencyRoutes from './routes/emergencyService.js';
 dotenv.config();
 
@@ -35,7 +34,6 @@ mongoose.connect(process.env.MONGODB_URL)
     app.use("/api/serviceprovider", ServiceProviderRoutes);
     app.use("/api/customer", CustomerRoutes);
     app.use("/api/bookings", bookingRoutes);
-    app.use("/api/users", userRoutes);
     app.use("/api/emergency", emergencyRoutes);
     // Start the server
     const PORT = process.env.PORT || 4000;

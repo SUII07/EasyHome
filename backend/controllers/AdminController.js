@@ -205,7 +205,7 @@ export const uploadProfilePicture = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error uploading profile picture",
-      error: error.message
+      error: error.message 
     });
   }
 };

@@ -45,7 +45,9 @@ router.get('/profile', verifyToken, async (req, res) => {
         price: provider.price,
         rating: provider.rating,
         totalReviews: provider.totalReviews,
-        availability: provider.availability
+        availability: provider.availability,
+        profilePicture: provider.profilePicture,
+        certificate: provider.certificate
       }
     });
   } catch (error) {

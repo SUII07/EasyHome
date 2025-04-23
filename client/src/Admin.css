@@ -1,4 +1,4 @@
-/* General Styles */
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -6,29 +6,46 @@
 }
 
 body {
+  background: none !important;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #f5f7fa;
 }
 
 /* Admin Dashboard Layout */
 .admin-dashboard {
   display: flex;
   min-height: 100vh;
+  background: none !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 2rem;
+  background: none !important;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
 }
 
 /* Sidebar Styles */
 .sidebar {
-  width: 280px;
-  background: #1a1f37;
-  color: #fff;
+  width: 250px;
+  background-color: #1a1f37 !important;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  transition: all 0.3s ease;
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
-  position: fixed;
-  height: 100vh;
-  transition: all 0.3s ease;
 }
 
 .sidebar-header {
@@ -48,6 +65,7 @@ body {
   color: #a0aec0;
 }
 
+/* Navigation Styles */
 nav {
   margin-top: 2rem;
   flex: 1;
@@ -88,72 +106,55 @@ nav {
   font-size: 1.2rem;
 }
 
-.logout {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Main Content Styles */
-.main-content {
-  flex: 1;
-  margin-left: 280px;
-  padding: 2rem;
-  background: #f5f7fa;
-}
-
 /* Header Styles */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 2rem;
+  background: #fff !important;
+  border-bottom: 1px solid #e0e0e0;
   margin-bottom: 2rem;
-  padding: 1rem;
-  background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header-left h1 {
-  font-size: 1.8rem;
-  color: #2d3748;
-  font-weight: 600;
+/* Content Styles */
+.content-container {
+  background: none !important;
+  padding: 2rem;
+  border-radius: 12px;
 }
 
-.header-right {
+/* Table Styles */
+.table-container {
+  background: #fff !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Loading State */
+.loading-spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9) !important;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 1.5rem;
+  z-index: 1000;
 }
 
-.notifications {
-  position: relative;
-  cursor: pointer;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #e53e3e;
-  color: #fff;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 10px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  cursor: pointer;
-}
-
-.profile-icon {
-  font-size: 2rem;
-  color: #4a5568;
+/* Ensure no background images */
+.admin-dashboard *,
+.main-content *,
+.sidebar *,
+.content-container *,
+.table-container * {
+  background-image: none !important;
 }
 
 /* Dashboard Overview Styles */
@@ -251,10 +252,6 @@ nav {
   color: #a0aec0;
 }
 
-.table-container {
-  overflow-x: auto;
-}
-
 .user-table {
   width: 100%;
   border-collapse: collapse;
@@ -318,17 +315,6 @@ nav {
   text-align: center;
   padding: 2rem;
   color: #718096;
-}
-
-.loading-spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #e2e8f0;
-  border-radius: 50%;
-  border-top-color: #3182ce;
-  animation: spin 1s linear infinite;
-  margin-right: 0.5rem;
 }
 
 .no-data {
@@ -820,14 +806,6 @@ nav {
   background: #e53e3e;
 }
 
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  color: #4a5568;
-}
-
 .error-message {
   text-align: center;
   color: #e53e3e;
@@ -879,4 +857,36 @@ nav {
   .reject-button {
     width: 100%;
   }
+}
+
+.document-section {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.view-document-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #003864;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.view-document-button:hover {
+  background-color: #00509e;
+}
+
+.document-info {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin: 5px 0 0 0;
+  word-break: break-all;
 }

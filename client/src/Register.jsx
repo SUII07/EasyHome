@@ -3,7 +3,7 @@ import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom"; 
 import axios from "axios";
 import "./Register.css";
-import { FaEye, FaEyeSlash, FaUser, FaPhone, FaMapMarkerAlt, FaEnvelope, FaLock, FaUserTie } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaUser, FaPhone, FaMapMarkerAlt, FaEnvelope, FaLock, FaUserTie, FaTools, FaDollarSign, FaFileUpload } from "react-icons/fa";
 
 const Register = () => {
   const [FullName, setFullName] = useState("");
@@ -19,6 +19,8 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationDocument, setVerificationDocument] = useState(null);
+  const [documentError, setDocumentError] = useState("");
 
   const navigate = useNavigate();
 
@@ -28,9 +30,62 @@ const Register = () => {
     setShowRoleSelection(!email.includes(".admin@"));
   };
 
+  const handleDocumentChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        setDocumentError("File size must be less than 5MB");
+        setVerificationDocument(null);
+        e.target.value = null;
+        return;
+      }
+      
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        setDocumentError("Only PDF, JPEG, and PNG files are allowed");
+        setVerificationDocument(null);
+        e.target.value = null;
+        return;
+      }
+      
+      setDocumentError("");
+      setVerificationDocument(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Validate phone number format
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(PhoneNumber)) {
+      toast.error("Phone number must be exactly 10 digits!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Convert phone number to integer for validation
+    const phoneInt = parseInt(PhoneNumber);
+    if (isNaN(phoneInt)) {
+      toast.error("Phone number must contain only numbers!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate name (only letters and spaces)
+    if (!FullName.match(/^[a-zA-Z\s]+$/)) {
+      toast.error("Name should only contain letters and spaces!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate email (must be Gmail)
+    if (!Email.toLowerCase().includes("@gmail.com")) {
+      toast.error("Please use a Gmail address!");
+      setIsLoading(false);
+      return;
+    }
 
     if (Password !== ConfirmPassword) {
       toast.error("Passwords do not match!");
@@ -44,68 +99,98 @@ const Register = () => {
       return;
     }
 
-    if (!PhoneNumber.match(/^\d{10}$/)) {
-      toast.error("Please enter a valid 10-digit phone number!");
-      setIsLoading(false);
-      return;
-    }
-
     if (!Address.trim()) {
       toast.error("Please enter your address!");
       setIsLoading(false);
       return;
     }
 
-    if (Role === "serviceprovider" && (!ServiceType || !Price)) {
-      toast.error("Please fill in all service provider details!");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Validate service type before sending
-      const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services"];
-      if (Role === "serviceprovider" && !validServiceTypes.includes(ServiceType.toLowerCase())) {
-        toast.error("Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services");
-        setIsLoading(false);
-        return;
-      }
+      let requestData;
+      const isAdmin = Email.includes(".admin@");
 
-      // Validate price before sending
-      if (Role === "serviceprovider" && (isNaN(Price) || parseFloat(Price) <= 0)) {
-        toast.error("Please enter a valid price greater than 0");
-        setIsLoading(false);
-        return;
-      }
-
-      // Base registration data with essential fields only
-      const requestData = {
-        fullName: FullName.trim(),
-        phoneNumber: PhoneNumber.trim(),
-        address: Address.trim(),
-        email: Email.trim().toLowerCase(),
-        password: Password,
-        confirmPassword: ConfirmPassword,
-        role: Role
-      };
-
-      // Add only essential service provider fields
-      if (Role === "serviceprovider") {
-        requestData.serviceType = ServiceType.trim().toLowerCase();
-        requestData.price = parseFloat(Price);
-        requestData.verificationStatus = "pending";
-      }
-
-      console.log("Sending registration request with data:", JSON.stringify(requestData, null, 2));
-      
-      const request = await axios.post("http://localhost:4000/api/auth/register", requestData, {
-        headers: {
-          'Content-Type': 'application/json'
+      if (isAdmin) {
+        // Admin registration data
+        requestData = {
+          fullName: FullName.trim(),
+          phoneNumber: phoneInt,
+          address: Address.trim(),
+          email: Email.trim().toLowerCase(),
+          password: Password,
+          confirmPassword: ConfirmPassword,
+          role: "admin"
+        };
+      } else if (Role === "serviceprovider") {
+        // Validate service provider specific fields
+        if (!ServiceType || !Price) {
+          toast.error("Please fill in all service provider details!");
+          setIsLoading(false);
+          return;
         }
-      });
+
+        const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services", "carpentry"];
+        if (!validServiceTypes.includes(ServiceType.toLowerCase())) {
+          toast.error("Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services");
+          setIsLoading(false);
+          return;
+        }
+
+        if (isNaN(Price) || parseFloat(Price) <= 0) {
+          toast.error("Please enter a valid price greater than 0");
+          setIsLoading(false);
+          return;
+        }
+
+        // Service provider registration data
+        const formData = new FormData();
+        formData.append("fullName", FullName.trim());
+        formData.append("phoneNumber", phoneInt);
+        formData.append("address", Address.trim());
+        formData.append("email", Email.trim().toLowerCase());
+        formData.append("password", Password);
+        formData.append("confirmPassword", ConfirmPassword);
+        formData.append("role", "serviceprovider");
+        formData.append("serviceType", ServiceType.trim().toLowerCase());
+        formData.append("price", Price);
+        formData.append("verificationStatus", "pending");
+        
+        if (verificationDocument) {
+          formData.append("verificationDocument", verificationDocument);
+        }
+        
+        requestData = formData;
+      } else {
+        // Customer registration data
+        requestData = {
+          fullName: FullName.trim(),
+          phoneNumber: phoneInt,
+          address: Address.trim(),
+          email: Email.trim().toLowerCase(),
+          password: Password,
+          confirmPassword: ConfirmPassword,
+          role: "customer"
+        };
+      }
+
+      console.log("Sending registration request with data:", 
+        requestData instanceof FormData 
+          ? "FormData (contains file)" 
+          : JSON.stringify(requestData, null, 2)
+      );
+      
+      const headers = requestData instanceof FormData 
+        ? { 'Content-Type': 'multipart/form-data' }
+        : { 'Content-Type': 'application/json' };
+
+      const request = await axios.post(
+        "http://localhost:4000/api/auth/register",
+        requestData,
+        { headers }
+      );
+
       console.log("Registration response:", request.data);
       toast.success(request.data.message || "Registration successful!");
-      navigate("/login"); 
+      navigate("/login");
     } catch (error) {
       if (error.response) {
         console.log("Server Response Status:", error.response.status);
@@ -114,7 +199,6 @@ const Register = () => {
         console.log("Request data that caused error:", JSON.stringify(error.config.data, null, 2));
         
         if (error.response.data.errors && error.response.data.errors.length > 0) {
-          // Log each validation error
           console.log("Validation Errors:", error.response.data.errors);
           error.response.data.errors.forEach(err => {
             console.log("Error:", err);
@@ -153,6 +237,8 @@ const Register = () => {
               className="input-field"
               value={FullName}
               onChange={(e) => setFullName(e.target.value)}
+              pattern="[a-zA-Z\s]+"
+              title="Name should only contain letters and spaces"
               required
             />
           </div>
@@ -168,9 +254,20 @@ const Register = () => {
                 placeholder="Enter your phone number"
                 className="input-field"
                 value={PhoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  // Only allow digits
+                  const value = e.target.value.replace(/\D/g, '');
+                  // Limit to 10 digits
+                  if (value.length <= 10) {
+                    setPhoneNumber(value);
+                  }
+                }}
+                pattern="[0-9]{10}"
+                maxLength="10"
+                title="Phone number must be exactly 10 digits"
                 required
               />
+              <small className="input-hint">Enter a 10-digit phone number</small>
             </div>
 
             <div className="input-group">
@@ -274,7 +371,7 @@ const Register = () => {
                 <>
                   <div className="input-group">
                     <label htmlFor="serviceType" className="input-label">
-                      <FaUserTie className="input-icon" /> Service Type
+                      <FaTools className="input-icon" /> Service Type
                     </label>
                     <select
                       id="serviceType"
@@ -289,12 +386,13 @@ const Register = () => {
                       <option value="painting">Painting</option>
                       <option value="plumbing">Plumbing</option>
                       <option value="hvac services">HVAC Services</option>
+                      <option value="carpentry">Carpentry</option>
                     </select>
                   </div>
 
                   <div className="input-group">
                     <label htmlFor="price" className="input-label">
-                      <FaUserTie className="input-icon" /> Service Price (per hour)
+                      <FaDollarSign className="input-icon" /> Service Price (per hour)
                     </label>
                     <input
                       id="price"
@@ -307,6 +405,26 @@ const Register = () => {
                       min="0"
                       step="0.01"
                     />
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="verificationDocument" className="input-label">
+                      <FaFileUpload className="input-icon" /> Upload Verification Document
+                    </label>
+                    <input
+                      id="verificationDocument"
+                      type="file"
+                      className="input-field file-input"
+                      onChange={handleDocumentChange}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      required
+                    />
+                    {documentError && (
+                      <p className="error-message">{documentError}</p>
+                    )}
+                    <p className="file-requirements">
+                      Accepted formats: PDF, JPEG, PNG (Max size: 5MB)
+                    </p>
                   </div>
                 </>
               )}

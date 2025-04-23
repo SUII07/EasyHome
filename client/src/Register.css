@@ -283,3 +283,35 @@
     }
   }
   
+  .file-input {
+    padding: 10px;
+    border: 2px dashed #e1e1e1;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .file-input:hover {
+    border-color: #003864;
+    background-color: #f0f2f5;
+  }
+  
+  .file-requirements {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 5px;
+  }
+  
+  .error-message {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+  }
+  
+  .input-hint {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 4px;
+    display: block;
+  }
+  

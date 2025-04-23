@@ -40,11 +40,30 @@ router.get('/requests', verifyToken, async (req, res) => {
     .populate('customerId', 'FullName Address PhoneNumber')
     .sort({ bookingDateTime: -1 });
 
-    console.log('Found bookings:', bookings);
+    // Format the response to handle null customerId
+    const formattedBookings = bookings.map(booking => {
+      const bookingObj = booking.toObject();
+      
+      // Handle case where customerId might be null
+      if (!booking.customerId) {
+        return {
+          ...bookingObj,
+          customerId: {
+            FullName: 'Unknown Customer',
+            Address: 'N/A',
+            PhoneNumber: 'N/A'
+          }
+        };
+      }
+
+      return bookingObj;
+    });
+
+    console.log('Found bookings:', formattedBookings);
 
     res.json({
       success: true,
-      bookings
+      bookings: formattedBookings
     });
   } catch (error) {
     console.error('Error fetching booking requests:', error);
@@ -276,16 +295,17 @@ router.get('/', verifyToken, async (req, res) => {
 
     console.log('Found bookings:', bookings);
 
-    // Transform the response to include flattened customer details
+    // Transform the response while keeping original field names
     const transformedBookings = bookings.map(booking => {
-      const { customerId, ...rest } = booking.toObject();
+      const bookingObj = booking.toObject();
       return {
-        ...rest,
-        customerName: customerId?.FullName || 'Customer Name Unavailable',
-        customerAddress: customerId?.Address || 'No address available',
-        customerPhone: customerId?.PhoneNumber || 'No phone available',
-        customerEmail: customerId?.Email,
-        customerId: customerId?._id
+        ...bookingObj,
+        customerId: bookingObj.customerId || {
+          FullName: 'Unknown Customer',
+          Address: 'No address available',
+          PhoneNumber: 'No phone available',
+          Email: 'No email available'
+        }
       };
     });
 

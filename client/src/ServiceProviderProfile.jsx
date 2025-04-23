@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaTools, FaDollarSign, FaPencilAlt, FaTrash, FaSave, FaTimes, FaArrowLeft, FaFileAlt, FaImage } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaTools, FaDollarSign, FaPencilAlt, FaTrash, FaSave, FaTimes, FaArrowLeft, FaFileAlt, FaImage } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import './ServiceProvider.css';
@@ -22,6 +22,7 @@ export default function ServiceProviderProfile() {
   const [certificate, setCertificate] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [previewCertificate, setPreviewCertificate] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -126,33 +127,114 @@ export default function ServiceProviderProfile() {
     }));
   };
 
-  const handleImageChange = (e, type) => {
+  const handleImageChange = async (e, type) => {
     const file = e.target.files[0];
-    if (file) {
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!validTypes.includes(file.type)) {
-        toast.error('Please upload a valid image file (JPEG, PNG)');
-        return;
-      }
+    if (!file) return;
 
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size should be less than 5MB');
-        return;
-      }
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Please upload a valid image file (JPEG, PNG)');
+      return;
+    }
 
-      if (type === 'profile') {
-        setProfilePicture(file);
-        setPreviewImage(URL.createObjectURL(file));
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size should be less than 5MB');
+      return;
+    }
+
+    // Set preview immediately for better UX
+    if (type === 'profile') {
+      setProfilePicture(file);
+      setPreviewImage(URL.createObjectURL(file));
+    } else {
+      setCertificate(file);
+      setPreviewCertificate(URL.createObjectURL(file));
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append(type === 'profile' ? 'profilePicture' : 'certificate', file);
+
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      const response = await axios.put(
+        'http://localhost:4000/api/serviceprovider/profile',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        const updatedData = response.data.provider;
+        
+        // Update component state
+        setProvider(prev => ({
+          ...prev,
+          ...(type === 'profile' 
+            ? { profilePicture: updatedData.profilePicture }
+            : { certificate: updatedData.certificate })
+        }));
+        
+        // Update local storage with the new URLs
+        const updatedUser = {
+          ...user,
+          ...(type === 'profile'
+            ? { profilePicture: updatedData.profilePicture }
+            : { certificate: updatedData.certificate })
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        toast.success(`${type === 'profile' ? 'Profile picture' : 'Certificate'} updated successfully`);
       } else {
-        setCertificate(file);
-        setPreviewCertificate(URL.createObjectURL(file));
+        throw new Error(response.data.message || `Failed to upload ${type === 'profile' ? 'profile picture' : 'certificate'}`);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error(error.response?.data?.message || `Failed to upload ${type === 'profile' ? 'profile picture' : 'certificate'}`);
+      
+      // Reset preview on error
+      if (type === 'profile') {
+        setProfilePicture(null);
+        setPreviewImage(provider?.profilePicture?.url || null);
+      } else {
+        setCertificate(null);
+        setPreviewCertificate(provider?.certificate?.url || null);
       }
     }
   };
 
-  const handleSave = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Validate phone number
+    if (!formData.phoneNumber.match(/^\d{10}$/)) {
+      toast.error("Phone number must be exactly 10 digits!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate name (only letters and spaces)
+    if (!formData.fullName.match(/^[a-zA-Z\s]+$/)) {
+      toast.error("Name should only contain letters and spaces!");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate email (must be Gmail)
+    if (!formData.email.toLowerCase().includes("@gmail.com")) {
+      toast.error("Please use a Gmail address!");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -238,6 +320,8 @@ export default function ServiceProviderProfile() {
       console.error('Error updating profile:', error);
       const errorMessage = error.response?.data?.message || 'Failed to update profile';
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -278,9 +362,6 @@ export default function ServiceProviderProfile() {
     <div className="profile-view">
       <div className="profile-header">
         <div className="header-left">
-          <button className="back-button" onClick={() => navigate(-1)}>
-            <FaArrowLeft />
-          </button>
           <h2>Profile Information</h2>
         </div>
       </div>
@@ -326,7 +407,7 @@ export default function ServiceProviderProfile() {
                   </>
                 ) : (
                   <>
-                    <button className="save-button" onClick={handleSave}>
+                    <button className="save-button" onClick={handleSubmit}>
                       <FaSave /> Save Changes
                     </button>
                     <button className="cancel-button" onClick={() => setIsEditing(false)}>
@@ -354,6 +435,9 @@ export default function ServiceProviderProfile() {
                     value={formData.fullName}
                     onChange={handleInputChange}
                     className="edit-input"
+                    pattern="[a-zA-Z\s]+"
+                    title="Name should only contain letters and spaces"
+                    required
                   />
                 ) : (
                   <p>{provider.fullName}</p>
@@ -384,29 +468,12 @@ export default function ServiceProviderProfile() {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     className="edit-input"
+                    pattern="[0-9]{10}"
+                    title="Phone number must be exactly 10 digits"
+                    required
                   />
                 ) : (
                   <p>{provider.phoneNumber}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="detail-item">
-              <div className="detail-header">
-                <FaMapMarkerAlt className="detail-icon" />
-                <label>Address</label>
-              </div>
-              <div className="detail-content">
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    className="edit-input"
-                  />
-                ) : (
-                  <p>{provider.address}</p>
                 )}
               </div>
             </div>

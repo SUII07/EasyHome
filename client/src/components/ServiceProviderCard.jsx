@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaStar, FaUser, FaMapMarkerAlt, FaTools, FaDollarSign, FaEye } from 'react-icons/fa';
+import { FaStar, FaUser, FaTools, FaDollarSign, FaEye } from 'react-icons/fa';
 import './ServiceProviderCard.css';
 
 const ServiceProviderCard = ({ provider }) => {
@@ -39,8 +39,8 @@ const ServiceProviderCard = ({ provider }) => {
           <span>{provider.serviceType}</span>
         </div>
         <div className="detail-item">
-          <FaMapMarkerAlt className="detail-icon" />
-          <span>{provider.address}</span>
+          <span className="detail-label">Address:</span>
+          <span className="detail-value">{provider.address}</span>
         </div>
         <div className="detail-item">
           <FaDollarSign className="detail-icon" />

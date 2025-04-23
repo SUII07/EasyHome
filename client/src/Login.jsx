@@ -8,7 +8,6 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -16,7 +15,6 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
 
     try {
       console.log("Attempting login with:", { email, password: "***" });
@@ -42,7 +40,6 @@ export default function Login() {
         // Handle redirection based on role and verification status
         if (!role) {
           console.error("No role found in user data");
-          setError("Invalid user data received");
           toast.error("Login failed: Invalid user data");
           return;
         }
@@ -63,16 +60,11 @@ export default function Login() {
               console.log("Service provider approved, redirecting to dashboard");
               navigate("/serviceprovider");
               toast.success("Welcome to your service provider dashboard!");
-            } else if (verificationStatus === "pending") {
-              console.log("Service provider pending approval");
-              setError("Your account is pending admin approval. Please wait for verification.");
-              toast.error("Your account is pending admin approval. Please wait for verification.");
+            } else {
+              console.log("Service provider not approved");
+              toast.error("Your account is not approved yet. Please wait for admin verification.");
               localStorage.removeItem("user");
-            } else if (verificationStatus === "rejected") {
-              console.log("Service provider rejected");
-              setError("Your account has been rejected. Please contact support.");
-              toast.error("Your account has been rejected. Please contact support.");
-              localStorage.removeItem("user");
+              localStorage.removeItem("token");
             }
             break;
           
@@ -93,10 +85,22 @@ export default function Login() {
       console.error("Login error:", error);
       if (error.response) {
         console.error("Error response:", error.response.data);
-        setError(error.response.data.message || "Login failed. Please check your credentials.");
-        toast.error(error.response.data.message || "Login failed. Please check your credentials.");
+        
+        // Handle specific error cases
+        if (error.response.status === 403) {
+          // Handle verification status errors
+          toast.error(error.response.data.message);
+        } else if (error.response.status === 401) {
+          // Handle invalid credentials
+          toast.error("Invalid email or password");
+        } else {
+          toast.error(error.response.data.message || "Login failed. Please check your credentials.");
+        }
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        toast.error("Unable to connect to server. Please try again later.");
       } else {
-        setError("Something went wrong. Please try again.");
+        console.error("Error setting up request:", error.message);
         toast.error("Something went wrong. Please try again.");
       }
     } finally {
@@ -109,12 +113,6 @@ export default function Login() {
       <div className="login-frame">
         <h1 className="welcome-back">Welcome Back!</h1>
         <p className="login-message">Please login to EasyHome</p>
-
-        {error && (
-          <div className="error-container">
-            <p className="error-message">{error}</p>
-          </div>
-        )}
 
         <form onSubmit={handleLogin} className="login-form">
           <div className="input-group">

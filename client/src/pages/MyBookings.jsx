@@ -36,15 +36,23 @@ const MyBookings = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:4000/api/bookings/history', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Fetch both normal bookings and emergency bookings
+      const [normalResponse, emergencyResponse] = await Promise.all([
+        fetch('http://localhost:4000/api/bookings/history', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch('http://localhost:4000/api/emergency/customer-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
 
-      if (response.status === 401) {
-        // Token is invalid or expired
+      if (normalResponse.status === 401 || emergencyResponse.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         toast.error('Your session has expired. Please login again.');
@@ -52,12 +60,36 @@ const MyBookings = () => {
         return;
       }
 
-      if (!response.ok) {
+      if (!normalResponse.ok || !emergencyResponse.ok) {
         throw new Error('Failed to fetch bookings');
       }
 
-      const data = await response.json();
-      setBookings(data.bookings);
+      const normalData = await normalResponse.json();
+      const emergencyData = await emergencyResponse.json();
+
+      // Process normal bookings
+      const normalBookings = normalData.bookings.map(booking => ({
+        ...booking,
+        isEmergency: false
+      }));
+
+      // Process emergency bookings
+      const emergencyBookings = emergencyData.requests.map(booking => ({
+        ...booking,
+        isEmergency: true
+      }));
+
+      // Combine and sort all bookings
+      const allBookings = [...normalBookings, ...emergencyBookings].sort((a, b) => {
+        // Sort by emergency status first
+        if (a.isEmergency !== b.isEmergency) {
+          return a.isEmergency ? -1 : 1;
+        }
+        // Then sort by date
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setBookings(allBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       if (error.message === 'Failed to fetch bookings') {
@@ -191,6 +223,12 @@ const MyBookings = () => {
     const [localReview, setLocalReview] = useState('');
     const [hoveredStar, setHoveredStar] = useState(0);
 
+    // Format the date based on whether it's an emergency booking or regular booking
+    const getFormattedDate = () => {
+      const date = booking.isEmergency ? booking.createdAt : booking.bookingDateTime;
+      return date ? new Date(date).toLocaleString() : 'Invalid Date';
+    };
+
     const handleRatingSubmit = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -233,7 +271,7 @@ const MyBookings = () => {
     };
     
     return (
-      <div className="booking-card">
+      <div className={`booking-card ${booking.isEmergency ? 'emergency' : ''}`}>
         <div className="booking-header">
           <div className="user-info">
             <FaUser className="icon" />
@@ -256,9 +294,10 @@ const MyBookings = () => {
               </div>
             )}
           </div>
-          <div className="status-section">
-            <span className={`status-badge ${booking.status}`}>
-              {booking.status}
+          <div className="booking-status-section">
+            <span className={`booking-status-badge ${booking.status} ${booking.isEmergency ? 'emergency' : ''}`}>
+              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              {booking.isEmergency && ' (Emergency)'}
             </span>
           </div>
         </div>
@@ -270,7 +309,7 @@ const MyBookings = () => {
           </div>
           <div className="detail-row">
             <FaCalendarAlt className="icon" />
-            <span>{new Date(booking.bookingDateTime).toLocaleString()}</span>
+            <span>{getFormattedDate()}</span>
           </div>
           <div className="detail-row">
             <FaDollarSign className="icon" />
@@ -383,9 +422,6 @@ const MyBookings = () => {
     <div className="page-container">
       <Header />
       <main className="my-bookings-container">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <FaArrowLeft />
-        </button>
         <div className="bookings-header">
           <h1>My Bookings</h1>
           <div className="filter-section">

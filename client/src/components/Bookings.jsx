@@ -1,30 +1,150 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FaMapMarkerAlt, 
   FaPhone, 
   FaCalendarAlt, 
   FaTools, 
   FaDollarSign, 
   FaCheck,
-  FaTimes
+  FaTimes,
+  FaExclamationTriangle,
+  FaClock,
+  FaUser,
+  FaStar,
+  FaMapMarkerAlt
 } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import './Bookings.css';
 
+const BookingCard = ({ booking, onResponse }) => {
+  const formattedDate = new Date(booking.bookingDateTime || booking.createdAt).toLocaleString('en-US', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const customerName = booking.customerId?.FullName || 'Customer Name Unavailable';
+  const customerPhone = booking.customerId?.PhoneNumber || 'No phone available';
+  const customerAddress = booking.customerId?.Address || 'No address available';
+
+  const handleMarkAsComplete = () => {
+    onResponse(booking._id, 'completed', booking.isEmergency);
+  };
+
+  return (
+    <div className={`customer-card ${booking.isEmergency ? 'emergency' : ''}`}>
+      {booking.isEmergency && (
+        <div className="emergency-badge">
+          <FaExclamationTriangle />
+          Emergency Request
+        </div>
+      )}
+      <div className="customer-header">
+        <div className="customer-info">
+          <h3>{customerName}</h3>
+          <div className="service-type">
+            <FaTools className="icon" />
+            <span>{booking.serviceType}</span>
+          </div>
+          {booking.rating && (
+            <div className="rating-badge">
+              <div className="stars">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FaStar
+                    key={star}
+                    className={`star ${star <= booking.rating ? 'active' : ''}`}
+                  />
+                ))}
+              </div>
+              {booking.review && (
+                <span className="review-tooltip" title={booking.review}>
+                  View Review
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="status-section">
+          <span className={`status-badge ${booking.status} ${booking.isEmergency ? 'emergency' : ''}`}>
+            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          </span>
+        </div>
+      </div>
+
+      <div className="customer-details">
+        <div className="detail-row">
+          <FaMapMarkerAlt className="icon" />
+          <span>{customerAddress}</span>
+        </div>
+        <div className="detail-row">
+          <FaPhone className="icon" />
+          <span>{customerPhone}</span>
+        </div>
+        <div className="detail-row">
+          <FaCalendarAlt className="icon" />
+          <span>{formattedDate}</span>
+        </div>
+        <div className="detail-row">
+          <FaDollarSign className="icon" />
+          <span>${booking.price}/hr</span>
+          {booking.isEmergency && (
+            <span className="emergency-rate-note">Emergency Rate</span>
+          )}
+        </div>
+      </div>
+
+      {booking.status === 'pending' && (
+        <div className="card-actions">
+          <button
+            className="decline-button"
+            onClick={() => onResponse(booking._id, 'declined', booking.isEmergency)}
+          >
+            <FaTimes />
+            <span>Decline</span>
+          </button>
+          <button
+            className={`accept-button ${booking.isEmergency ? 'emergency' : ''}`}
+            onClick={() => onResponse(booking._id, 'accepted', booking.isEmergency)}
+          >
+            <FaCheck />
+            <span>{booking.isEmergency ? 'Accept Emergency' : 'Accept'}</span>
+          </button>
+        </div>
+      )}
+
+      {booking.status === 'accepted' && (
+        <div className="card-actions">
+          <button
+            className="complete-button"
+            onClick={handleMarkAsComplete}
+          >
+            <FaCheck />
+            <span>Mark as Complete</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Bookings = ({ activeSection = 'bookings' }) => {
-  const [bookings, setBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchBookings();
+    fetchAllBookings();
   }, []);
 
-  const fetchBookings = async () => {
+  const fetchAllBookings = async () => {
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
         navigate('/login');
@@ -37,80 +157,59 @@ const Bookings = ({ activeSection = 'bookings' }) => {
         throw new Error('User information not found');
       }
 
-      console.log('Fetching bookings for provider:', user._id);
+      // Fetch both normal bookings and emergency requests
+      const [normalBookings, emergencyBookings] = await Promise.all([
+        // Fetch normal bookings
+        axios.get(`http://localhost:4000/api/bookings?providerId=${user._id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        // Fetch emergency bookings
+        axios.get('http://localhost:4000/api/emergency/provider-requests', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+      ]);
 
-      // Fetch all bookings for the provider
-      const response = await fetch(`http://localhost:4000/api/bookings?providerId=${user._id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Process normal bookings
+      const processedNormalBookings = normalBookings.data.success ? 
+        normalBookings.data.bookings.map(booking => ({
+          ...booking,
+          isEmergency: false
+        })) : [];
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          navigate('/login');
-          throw new Error('Session expired. Please login again.');
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch bookings');
-      }
+      // Process emergency bookings
+      const processedEmergencyBookings = emergencyBookings.data.success ?
+        emergencyBookings.data.requests.map(booking => ({
+          ...booking,
+          isEmergency: true
+        })) : [];
 
-      const data = await response.json();
-      console.log('Received bookings data:', data);
+      // Combine and sort all bookings
+      const combinedBookings = [...processedEmergencyBookings, ...processedNormalBookings]
+        .sort((a, b) => {
+          // Sort by emergency status first
+          if (a.isEmergency !== b.isEmergency) {
+            return a.isEmergency ? -1 : 1;
+          }
+          // Then sort by date
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
-      if (data.success) {
-        // Fetch customer details for each booking
-        const bookingsWithCustomers = await Promise.all(
-          data.bookings.map(async (booking) => {
-            try {
-              // Extract customer ID, handling both object and string cases
-              const customerId = booking.customerId?._id || booking.customerId;
-              
-              console.log(`Fetching customer details for booking ${booking._id}, customerId:`, customerId);
-              
-              const customerResponse = await fetch(`http://localhost:4000/api/users/customer/${customerId}`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json'
-                }
-              });
-
-              if (!customerResponse.ok) {
-                console.error(`Failed to fetch customer details for booking ${booking._id}`);
-                return booking;
-              }
-
-              const customerData = await customerResponse.json();
-              console.log(`Customer data received for booking ${booking._id}:`, customerData);
-
-              return {
-                ...booking,
-                customer: customerData.customer || customerData.user || customerData
-              };
-            } catch (error) {
-              console.error(`Error fetching customer details for booking ${booking._id}:`, error);
-              return booking;
-            }
-          })
-        );
-
-        console.log('Final bookings with customer details:', bookingsWithCustomers);
-        setBookings(bookingsWithCustomers);
-      } else {
-        setError(data.message || 'Failed to fetch bookings');
-      }
+      setAllBookings(combinedBookings);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       setError(error.message);
-    } finally {
       setLoading(false);
     }
   };
 
-  const handleBookingResponse = async (bookingId, status) => {
+  const handleBookingResponse = async (bookingId, status, isEmergency = false) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -118,164 +217,96 @@ const Bookings = ({ activeSection = 'bookings' }) => {
         return;
       }
 
-      console.log(`Updating booking ${bookingId} to status: ${status}`);
+      const endpoint = isEmergency
+        ? `http://localhost:4000/api/emergency/response/${bookingId}`
+        : `http://localhost:4000/api/bookings/${bookingId}/status`;
 
-      const response = await fetch(`http://localhost:4000/api/bookings/${bookingId}/status`, {
-        method: 'PATCH',
+      const response = await axios({
+        method: isEmergency ? 'put' : 'patch',
+        url: endpoint,
+        data: { status },
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status })
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error response:', errorData);
-        throw new Error(errorData.message || 'Failed to update booking status');
-      }
-
-      const data = await response.json();
-      console.log('Status update response:', data);
-
-      if (data.success || data.status === status) {
-        toast.success(`Booking marked as ${status}`);
-        // Refresh the bookings list
-        fetchBookings();
+      if (response.data.success) {
+        // Update the status in the local state
+        setAllBookings(prevBookings => 
+          prevBookings.map(booking => 
+            booking._id === bookingId 
+              ? { ...booking, status } 
+              : booking
+          )
+        );
+        
+        const actionMessage = status === 'completed' 
+          ? 'Service marked as completed' 
+          : `Service ${status} successfully`;
+        toast.success(actionMessage);
+        
+        // Refresh the bookings list after a short delay
+        setTimeout(() => {
+          fetchAllBookings();
+        }, 1000);
       } else {
-        toast.error(data.message || 'Failed to update booking status');
+        toast.error(response.data.message || 'Failed to update status');
       }
     } catch (error) {
       console.error('Error updating booking:', error);
-      toast.error(error.message || 'Failed to update booking status');
+      toast.error(error.response?.data?.message || 'Failed to update status');
     }
   };
 
   const getFilteredBookings = () => {
-    console.log('Current filter:', selectedFilter);
-    console.log('All bookings:', bookings);
-
-    // First filter out pending bookings unless specifically viewing dashboard
-    let filteredBookings = bookings.filter(booking => 
-      activeSection === 'dashboard' || booking.status !== 'pending'
-    );
-
-    // Then apply the selected filter
-    if (selectedFilter !== 'all') {
-      filteredBookings = filteredBookings.filter(booking => booking.status === selectedFilter);
+    // For the dashboard, only show pending requests
+    if (activeSection === 'dashboard') {
+      return allBookings.filter(booking => booking.status === 'pending');
     }
-
-    console.log('Filtered bookings:', filteredBookings);
-    return filteredBookings;
+    
+    // For the bookings page, apply the selected filter
+    if (selectedFilter === 'all') {
+      return allBookings;
+    }
+    return allBookings.filter(booking => booking.status === selectedFilter);
   };
 
   const renderBookingCard = (booking) => {
+    // Don't render non-pending bookings in dashboard
+    if (activeSection === 'dashboard' && booking.status !== 'pending') {
+      return null;
+    }
+
     if (!booking) return null;
 
-    console.log('Rendering booking:', booking);
-
-    const formattedDate = new Date(booking.bookingDateTime).toLocaleString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    const renderActionButtons = (booking) => {
-      switch (booking.status) {
-        case 'pending':
-          return (
-            <div className="card-actions">
-              <button
-                className="decline-button"
-                onClick={() => handleBookingResponse(booking._id, 'declined')}
-              >
-                <FaTimes />
-                <span>Decline</span>
-              </button>
-              <button
-                className="accept-button"
-                onClick={() => handleBookingResponse(booking._id, 'accepted')}
-              >
-                <FaCheck />
-                <span>Accept</span>
-              </button>
-            </div>
-          );
-        case 'accepted':
-          return (
-            <div className="card-actions">
-              <button
-                className="complete-button"
-                onClick={() => handleBookingResponse(booking._id, 'completed')}
-              >
-                <FaCheck />
-                <span>Mark as Complete</span>
-              </button>
-            </div>
-          );
-        default:
-          return null;
-      }
-    };
-
     return (
-      <div className="customer-card">
-        <div className="customer-header">
-          <div className="customer-info">
-            <h3>{booking.customerName}</h3>
-            <div className="service-type">
-              <FaTools className="icon" />
-              <span>{booking.serviceType}</span>
-            </div>
-          </div>
-          <span className={`status-badge ${booking.status}`}>
-            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-          </span>
-        </div>
-
-        <div className="customer-details">
-          <div className="detail-row">
-            <FaMapMarkerAlt className="icon" />
-            <span>{booking.customerAddress}</span>
-          </div>
-          <div className="detail-row">
-            <FaPhone className="icon" />
-            <span>{booking.customerPhone}</span>
-          </div>
-          <div className="detail-row date">
-            <FaCalendarAlt className="icon" />
-            <span>{formattedDate}</span>
-          </div>
-          <div className="detail-row price">
-            <FaDollarSign className="icon" />
-            <span>${booking.price || 0}/hr</span>
-          </div>
-        </div>
-
-        {renderActionButtons(booking)}
-      </div>
+      <BookingCard 
+        key={booking._id}
+        booking={booking}
+        onResponse={handleBookingResponse}
+      />
     );
   };
 
   return (
     <div className="bookings-container">
       <div className="bookings-header">
-        <h2>My Bookings</h2>
-        <div className="filter-section">
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Bookings</option>
-            <option value="accepted">Accepted</option>
-            <option value="completed">Completed</option>
-            <option value="declined">Canceled</option>
-          </select>
-        </div>
+        <h2>{activeSection === 'dashboard' ? 'New Booking Requests' : 'My Bookings'}</h2>
+        {activeSection !== 'dashboard' && (
+          <div className="filter-section">
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Bookings</option>
+              <option value="accepted">Accepted</option>
+              <option value="completed">Completed</option>
+              <option value="declined">Declined</option>
+            </select>
+          </div>
+        )}
       </div>
 
       <div className="bookings-grid">
@@ -291,7 +322,9 @@ const Bookings = ({ activeSection = 'bookings' }) => {
           ))
         ) : (
           <p className="no-bookings">
-            No {selectedFilter === 'all' ? '' : selectedFilter} bookings found
+            {activeSection === 'dashboard' 
+              ? 'No new booking requests' 
+              : `No ${selectedFilter === 'all' ? '' : selectedFilter} bookings found`}
           </p>
         )}
       </div>

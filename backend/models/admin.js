@@ -39,5 +39,6 @@ const adminSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-const adminModel = mongoose.model('admin', adminSchema);
-export default adminModel;
+// Check if the model is already defined
+const Admin = mongoose.models.admin || mongoose.model('admin', adminSchema);
+export default Admin;

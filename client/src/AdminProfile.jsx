@@ -33,21 +33,15 @@ const AdminProfile = () => {
       try {
         setIsLoading(true);
         const token = localStorage.getItem('token');
-        if (!token) {
-          toast.error('Authentication token not found');
-          navigate('/login');
-          return;
-        }
-
-        // Get admin ID from localStorage
         const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || user.role !== 'admin') {
-          toast.error('Access denied. Only administrators can access this page.');
+
+        if (!token || !user || user.role !== 'admin') {
+          toast.error('Authentication failed. Please login again.');
           navigate('/login');
           return;
         }
 
-        const adminId = user._id;
+        const adminId = user.id;
         
         const response = await axios.get(`http://localhost:4000/api/admin/profile/${adminId}`, {
           headers: {
@@ -56,30 +50,43 @@ const AdminProfile = () => {
         });
 
         if (response.data.success) {
-          const { FullName, Email, PhoneNumber, Address, profilePicture } = response.data.admin;
+          const admin = response.data.admin;
           setAdminData({
-            FullName,
-            Email,
-            PhoneNumber,
-            Address,
-            profilePicture: profilePicture || { url: '', public_id: '' }
+            FullName: admin.FullName,
+            Email: admin.Email,
+            PhoneNumber: admin.PhoneNumber,
+            Address: admin.Address,
+            profilePicture: admin.profilePicture || { url: '', public_id: '' }
           });
           setFormData({
-            FullName,
-            Email,
-            PhoneNumber,
-            Address,
+            FullName: admin.FullName,
+            Email: admin.Email,
+            PhoneNumber: admin.PhoneNumber,
+            Address: admin.Address,
           });
+
+          // Update localStorage with the latest data
+          localStorage.setItem('user', JSON.stringify({
+            ...user,
+            fullName: admin.FullName,
+            email: admin.Email,
+            PhoneNumber: admin.PhoneNumber,
+            Address: admin.Address,
+            profilePicture: admin.profilePicture
+          }));
         } else {
           throw new Error(response.data.message || 'Failed to fetch admin data');
         }
       } catch (error) {
         console.error('Error fetching admin data:', error);
-        toast.error(error.response?.data?.message || 'Failed to fetch admin data');
-        
         if (error.response?.status === 401) {
+          toast.error('Session expired. Please login again');
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
           navigate('/login');
+          return;
         }
+        toast.error(error.response?.data?.message || 'Failed to fetch admin data');
       } finally {
         setIsLoading(false);
       }
@@ -125,7 +132,7 @@ const AdminProfile = () => {
       const user = JSON.parse(localStorage.getItem('user'));
 
       const response = await axios.post(
-        `http://localhost:4000/api/admin/profile/${user._id}/upload-picture`,
+        `http://localhost:4000/api/admin/profile/${user.id}/upload-picture`,
         formData,
         {
           headers: {
@@ -136,19 +143,24 @@ const AdminProfile = () => {
       );
 
       if (response.data.success) {
+        const updatedProfilePicture = response.data.profilePicture;
+        
+        // Update component state
         setAdminData(prev => ({
           ...prev,
-          profilePicture: response.data.profilePicture
+          profilePicture: updatedProfilePicture
         }));
         
-        // Update local storage
+        // Update local storage with the new profile picture URL
         const updatedUser = {
           ...user,
-          profilePicture: response.data.profilePicture
+          profilePicture: updatedProfilePicture
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
         toast.success('Profile picture updated successfully');
+      } else {
+        throw new Error(response.data.message || 'Failed to upload profile picture');
       }
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -179,11 +191,13 @@ const AdminProfile = () => {
       }
 
       const user = JSON.parse(localStorage.getItem('user'));
-      const adminId = user._id;
+      const adminId = user.id;
 
       // Keep the original email, don't allow it to be changed
       const dataToUpdate = {
-        ...formData,
+        FullName: formData.FullName,
+        PhoneNumber: formData.PhoneNumber,
+        Address: formData.Address,
         Email: adminData.Email // Keep the original email
       };
 
@@ -192,7 +206,8 @@ const AdminProfile = () => {
         dataToUpdate,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -240,7 +255,7 @@ const AdminProfile = () => {
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user'));
         
-        await axios.delete(`http://localhost:4000/api/admin/profile/${user._id}`, {
+        await axios.delete(`http://localhost:4000/api/admin/profile/${user.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

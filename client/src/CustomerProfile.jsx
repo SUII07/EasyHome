@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import './CustomerProfile.css';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaArrowLeft, FaCamera } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaArrowLeft, FaCamera } from 'react-icons/fa';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -27,56 +27,82 @@ const CustomerProfile = () => {
         const token = localStorage.getItem('token');
 
         if (!userData || !token) {
+          toast.error('Please login again');
           navigate('/login');
           return;
         }
 
-        // Set initial data from localStorage
-        setUser(userData);
-        setFormData({
-          FullName: userData.FullName || userData.fullName || '',
-          Email: userData.Email || userData.email || '',
-          PhoneNumber: userData.PhoneNumber || userData.phoneNumber || '',
-          Address: userData.Address || userData.address || ''
+        // Set initial data from localStorage with correct case
+        setUser({
+          ...userData,
+          _id: userData.id, // Map id to _id
+          FullName: userData.fullName,
+          Email: userData.email,
+          PhoneNumber: userData.PhoneNumber || '',
+          Address: userData.Address || ''
         });
 
-        // Fetch the latest user data from the server
+        setFormData({
+          FullName: userData.fullName || '',
+          Email: userData.email || '',
+          PhoneNumber: userData.PhoneNumber || '',
+          Address: userData.Address || ''
+        });
+
+        // Fetch the latest user data from the server using auth route
         const response = await axios.get(
-          `http://localhost:4000/api/auth/user/${userData._id}`,
+          `http://localhost:4000/api/auth/user/${userData.id}`,
           {
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
             }
           }
         );
 
         if (response.data) {
           const updatedUserData = response.data;
-          setUser(updatedUserData);
+          // Ensure we use the correct case for field names
+          const formattedUserData = {
+            ...updatedUserData,
+            _id: updatedUserData._id,
+            FullName: updatedUserData.FullName,
+            Email: updatedUserData.Email,
+            PhoneNumber: updatedUserData.PhoneNumber,
+            Address: updatedUserData.Address,
+            role: updatedUserData.role || 'customer',
+            profilePicture: updatedUserData.profilePicture
+          };
+          
+          setUser(formattedUserData);
           setFormData({
-            FullName: updatedUserData.FullName || updatedUserData.fullName || '',
-            Email: updatedUserData.Email || updatedUserData.email || '',
-            PhoneNumber: updatedUserData.PhoneNumber || updatedUserData.phoneNumber || '',
-            Address: updatedUserData.Address || updatedUserData.address || ''
+            FullName: formattedUserData.FullName || '',
+            Email: formattedUserData.Email || '',
+            PhoneNumber: formattedUserData.PhoneNumber || '',
+            Address: formattedUserData.Address || ''
           });
 
           // Update localStorage with the latest data
-          localStorage.setItem('user', JSON.stringify(updatedUserData));
+          localStorage.setItem('user', JSON.stringify({
+            id: formattedUserData._id,
+            fullName: formattedUserData.FullName,
+            email: formattedUserData.Email,
+            role: formattedUserData.role,
+            PhoneNumber: formattedUserData.PhoneNumber,
+            Address: formattedUserData.Address,
+            profilePicture: formattedUserData.profilePicture
+          }));
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 || error.response?.status === 403) {
           toast.error('Session expired. Please login again');
           localStorage.removeItem('user');
           localStorage.removeItem('token');
           navigate('/login');
           return;
         }
-        // Don't show error toast if we already have user data from localStorage
-        if (!user) {
-          toast.error('Failed to load latest user data');
-        }
+        toast.error('Failed to load latest user data');
       }
     };
 
@@ -94,33 +120,55 @@ const CustomerProfile = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      
+      if (!token || !userData) {
         toast.error('Please login again');
         navigate('/login');
         return;
       }
 
+      // Ensure we're sending data with correct case sensitivity
+      const updateData = {
+        FullName: formData.FullName,
+        Email: formData.Email,
+        PhoneNumber: formData.PhoneNumber,
+        Address: formData.Address
+      };
+
       const response = await axios.put(
-        `http://localhost:4000/api/auth/update/${user._id}`,
-        formData,
+        `http://localhost:4000/api/auth/update/${userData.id}`,
+        updateData,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
 
       if (response.status === 200) {
-        const updatedUser = { ...user, ...formData };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+        const updatedUser = {
+          ...user,
+          ...updateData
+        };
+        // Update localStorage with the correct field names
+        localStorage.setItem('user', JSON.stringify({
+          id: updatedUser._id,
+          fullName: updatedUser.FullName,
+          email: updatedUser.Email,
+          role: updatedUser.role,
+          PhoneNumber: updatedUser.PhoneNumber,
+          Address: updatedUser.Address,
+          profilePicture: updatedUser.profilePicture
+        }));
         setUser(updatedUser);
         setIsEditing(false);
         toast.success('Profile updated successfully');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Session expired. Please login again');
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -138,17 +186,20 @@ const CustomerProfile = () => {
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
+      const userData = JSON.parse(localStorage.getItem('user'));
+      
+      if (!token || !userData) {
         toast.error('Please login again');
         navigate('/login');
         return;
       }
 
       await axios.delete(
-        `http://localhost:4000/api/auth/delete/${user._id}`,
+        `http://localhost:4000/api/auth/delete/${userData.id}`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -158,7 +209,7 @@ const CustomerProfile = () => {
       navigate('/login');
     } catch (error) {
       console.error('Error deleting account:', error);
-      if (error.response?.status === 401) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
         toast.error('Session expired. Please login again');
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -213,19 +264,24 @@ const CustomerProfile = () => {
       );
 
       if (response.data.success) {
+        const updatedProfilePicture = response.data.profilePicture;
+        
+        // Update component state
         setUser(prev => ({
           ...prev,
-          profilePicture: response.data.profilePicture
+          profilePicture: updatedProfilePicture
         }));
         
-        // Update local storage
+        // Update local storage with the new profile picture URL
         const updatedUser = {
           ...user,
-          profilePicture: response.data.profilePicture
+          profilePicture: updatedProfilePicture
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
         toast.success('Profile picture updated successfully');
+      } else {
+        throw new Error(response.data.message || 'Failed to upload profile picture');
       }
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -299,29 +355,26 @@ const CustomerProfile = () => {
                   <FaUser className="info-icon" />
                   <div>
                     <label>Full Name</label>
-                    <p>{user.FullName || user.fullName}</p>
+                    <p>{user.FullName}</p>
                   </div>
                 </div>
                 <div className="info-item">
                   <FaEnvelope className="info-icon" />
                   <div>
                     <label>Email</label>
-                    <p>{user.Email || user.email}</p>
+                    <p>{user.Email}</p>
                   </div>
                 </div>
                 <div className="info-item">
                   <FaPhone className="info-icon" />
                   <div>
                     <label>Phone Number</label>
-                    <p>{user.PhoneNumber || user.phoneNumber || 'Not provided'}</p>
+                    <p>{user.PhoneNumber || 'Not provided'}</p>
                   </div>
                 </div>
                 <div className="info-item">
-                  <FaMapMarkerAlt className="info-icon" />
-                  <div>
-                    <label>Address</label>
-                    <p>{user.Address || user.address || 'Not provided'}</p>
-                  </div>
+                  <label>Address</label>
+                  <p>{user.Address || 'Not provided'}</p>
                 </div>
                 <div className="profile-actions">
                   <button className="edit-btn" onClick={() => setIsEditing(true)}>

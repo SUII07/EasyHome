@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { FaArrowLeft, FaTools, FaMapMarkerAlt, FaDollarSign, FaStar, FaUserCircle, FaPhone, FaExclamationTriangle } from 'react-icons/fa';
+import { FaArrowLeft, FaTools, FaDollarSign, FaStar, FaUserCircle, FaPhone, FaExclamationTriangle } from 'react-icons/fa';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import "./ProviderList.css";
@@ -182,9 +182,6 @@ const ProviderList = () => {
       <div className="main-container">
         <div className="sub-header">
           <div className="header-content">
-            <button className="back-button" onClick={() => navigate("/home")}>
-              <FaArrowLeft />
-            </button>
             <h2>{formatServiceType(serviceType)} Service Providers</h2>
             <button 
               className="emergency-service-btn"
@@ -252,8 +249,10 @@ const ProviderList = () => {
                       <span>{provider.phoneNumber || 'No phone number'}</span>
                     </div>
                     <div className="detail-row">
-                      <FaMapMarkerAlt className="detail-icon" />
-                      <span>{provider.address || 'No address'}</span>
+                      <div className="provider-detail">
+                        <span className="detail-label">Address:</span>
+                        <span className="detail-value">{provider.address}</span>
+                      </div>
                     </div>
                   </div>
 

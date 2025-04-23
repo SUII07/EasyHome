@@ -69,9 +69,6 @@ const ProviderDetailView = () => {
   return (
     <div className="provider-detail-page">
       <Header />
-      <button className="back-button" onClick={() => navigate(-1)} aria-label="Go back">
-        <FaArrowLeft />
-      </button>
       <div className="provider-detail-container">
         <div className="provider-detail-card">
           <div className="provider-header">

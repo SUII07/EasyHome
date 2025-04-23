@@ -1,7 +1,7 @@
 .bookings-container {
   padding: 2rem;
-  width: 100%;
-  background-color: #f8fafc;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .bookings-header {
@@ -54,19 +54,68 @@
 
 .bookings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
 /* Customer Card Styles */
 .customer-card {
   background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.customer-card.emergency {
+  background: linear-gradient(to bottom right, #fff5f5, #fff);
+  border: 2px solid #ff4d4d;
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.15);
+}
+
+.emergency-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: #ff4d4d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 77, 77, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+  }
+}
+
+.emergency-rate-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.75rem;
+  font-size: 0.875rem;
+  color: #ff4d4d;
+  background-color: #fff5f5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .customer-header {
@@ -76,12 +125,23 @@
   margin-bottom: 20px;
 }
 
+.customer-info {
+  margin-top: 1rem;
+}
+
 .customer-info h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: #1a1f36;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.customer-info p {
+  margin: 0.5rem 0;
+  color: #4a5568;
 }
 
 .service-type {
@@ -98,32 +158,49 @@
   font-size: 1.1rem;
 }
 
+.status-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: fit-content;
+}
+
 .status-badge {
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: capitalize;
 }
 
-.status-badge.completed {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+.status-badge.pending, .status-badge.accepted, .status-badge.completed, .status-badge.declined {
+ margin-top: 40px;
 }
 
 .status-badge.pending {
-  background-color: #fff8e1;
-  color: #f57c00;
+  background: #ffdb4d;
+  color: white;
+  border: 1px solid #ffe0b2;
 }
 
 .status-badge.accepted {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background: #70f17b;
+  color: white;
+  border: 1px solid #c8e6c9;
+}
+
+.status-badge.completed {
+  background: #53aceb;
+  color: white;
+  border: 1px solid #bbdefb;
 }
 
 .status-badge.declined {
-  background-color: #ffebee;
-  color: #c62828;
+  background: red;
+  color: white;
+  border: 1px solid #ffcdd2;
 }
 
 .detail-row {
@@ -163,55 +240,50 @@
 }
 
 .card-actions {
+  margin-top: 1.5rem;
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 1rem;
 }
 
-.action-button {
+.complete-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  transition: background-color 0.2s;
   width: 100%;
+  justify-content: center;
+  margin-top: 10px;
 }
 
-.action-button.complete {
-  background-color: #0066cc;
-  color: white;
+.complete-button:hover {
+  background-color: #45a049;
 }
 
-.action-button.complete:hover {
-  background-color: #0052a3;
+.complete-button svg {
+  font-size: 16px;
 }
 
-.action-button.accept {
-  background-color: #2e7d32;
-  color: white;
+.complete-button.emergency {
+  background-color: #ff4d4d;
 }
 
-.action-button.accept:hover {
-  background-color: #1b5e20;
+.complete-button.emergency:hover {
+  background-color: #ff3333;
 }
 
-.action-button.decline {
-  background-color: #c62828;
-  color: white;
+.accept-button.emergency {
+  background: #ff4444;
 }
 
-.action-button.decline:hover {
-  background-color: #b71c1c;
-}
-
-.action-button .icon {
-  font-size: 1.1rem;
+.accept-button.emergency:hover {
+  background: #ff2020;
 }
 
 /* Remove hover transform effect */
@@ -265,4 +337,11 @@
   .customer-card {
     padding: 1.25rem;
   }
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.25rem;
+  color: #4a5568;
 } 

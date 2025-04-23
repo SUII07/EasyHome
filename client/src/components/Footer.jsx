@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaMapMarkerAlt, FaPhone, FaEnvelope } from 'react-icons/fa';
+import { FaTwitter, FaFacebook, FaInstagram, FaYoutube, FaPhone, FaEnvelope } from 'react-icons/fa';
 import './Footer.css';
 
 const Footer = () => {
@@ -60,19 +60,19 @@ const Footer = () => {
             <ul>
               <li>
                 <div className="contact-item">
-                  <FaMapMarkerAlt className="contact-icon" />
-                  <span>123 Service Street, City, State 12345</span>
+                  <span className="contact-label">Address:</span>
+                  <span className="contact-value">123 Main Street, City, Country</span>
                 </div>
               </li>
               <li>
                 <div className="contact-item">
-                  <FaPhone className="contact-icon" />
+                  <span className="contact-label">Phone:</span>
                   <a href="tel:1-800-EASY-HOME">1-800-EASY-HOME</a>
                 </div>
               </li>
               <li>
                 <div className="contact-item">
-                  <FaEnvelope className="contact-icon" />
+                  <span className="contact-label">Email:</span>
                   <a href="mailto:support@easyhome.com">support@easyhome.com</a>
                 </div>
               </li>

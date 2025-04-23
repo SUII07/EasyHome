@@ -211,7 +211,14 @@
   color: #0052a3;
 }
 
-.status-badge {
+.booking-status-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: fit-content;
+}
+
+.booking-status-badge {
   padding: 8px 16px;
   border-radius: 30px;
   color: #ffffff;
@@ -223,22 +230,22 @@
   white-space: nowrap;
 }
 
-.status-badge.pending {
+.booking-status-badge.pending {
   background: linear-gradient(45deg, #f0ad4e, #f4c37d);
   color: #ffffff;
 }
 
-.status-badge.accepted {
+.booking-status-badge.accepted {
   background: linear-gradient(45deg, #5cb85c, #80cc80);
   color: #ffffff;
 }
 
-.status-badge.completed {
+.booking-status-badge.completed {
   background: linear-gradient(45deg, #0275d8, #2f96ff);
   color: #ffffff;
 }
 
-.status-badge.declined {
+.booking-status-badge.declined {
   background: linear-gradient(45deg, #d9534f, #eb6b67);
   color: #ffffff;
 }

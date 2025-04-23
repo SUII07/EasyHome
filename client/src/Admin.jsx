@@ -22,6 +22,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTimeout, setSearchTimeout] = useState(null);
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
   // Fetch admin's name from localStorage on component mount
   useEffect(() => {
@@ -370,7 +371,7 @@ const Admin = () => {
         throw new Error('Authentication token not found');
       }
 
-      const response = await axios.put(
+      const response = await axios.patch(
         `http://localhost:4000/api/admin/approve-provider/${providerId}`,
         {},
         {
@@ -437,6 +438,14 @@ const Admin = () => {
     navigate('/admin/profile');
   };
 
+  const handleNavigation = (path) => {
+    setIsPageTransitioning(true);
+    setTimeout(() => {
+      navigate(path);
+      setIsPageTransitioning(false);
+    }, 300);
+  };
+
   if (loading) {
     return (
       <div className="admin-container">
@@ -459,7 +468,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="admin-dashboard">
+    <div className={`admin-dashboard ${isPageTransitioning ? 'page-transition' : ''}`}>
       <aside className="sidebar">
         <div className="sidebar-header">
           <h2 className="logo">EasyHome</h2>
@@ -469,7 +478,7 @@ const Admin = () => {
           <ul>
             <li className="nav-item">
               <button 
-                onClick={() => navigate("/admin")} 
+                onClick={() => handleNavigation("/admin")} 
                 className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`}
               >
                 <FaHome className="icon" />
@@ -478,7 +487,7 @@ const Admin = () => {
             </li>
             <li className="nav-item">
               <button 
-                onClick={() => navigate("/admin/customers")} 
+                onClick={() => handleNavigation("/admin/customers")} 
                 className={`nav-link ${location.pathname === "/admin/customers" ? "active" : ""}`}
               >
                 <FaUsers className="icon" />
@@ -487,7 +496,7 @@ const Admin = () => {
             </li>
             <li className="nav-item">
               <button 
-                onClick={() => navigate("/admin/serviceproviders")} 
+                onClick={() => handleNavigation("/admin/serviceproviders")} 
                 className={`nav-link ${location.pathname === "/admin/serviceproviders" ? "active" : ""}`}
               >
                 <FaUserTie className="icon" />
@@ -500,12 +509,12 @@ const Admin = () => {
                 Analytics
               </button>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <button className="nav-link">
                 <FaCog className="icon" />
                 Settings
               </button>
-            </li>
+            </li> */}
           </ul>
         </nav>
         <div className="logout">
@@ -522,10 +531,10 @@ const Admin = () => {
             <h1>{getCurrentPageTitle()}</h1>
           </div>
           <div className="header-right">
-            <div className="notifications">
+            {/* <div className="notifications">
               <FaBell className="icon" />
               {notifications > 0 && <span className="notification-badge">{notifications}</span>}
-            </div>
+            </div> */}
             <div className="profile" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
               <FaUserCircle className="profile-icon" />
               <span>{adminName || 'Admin'}</span>
@@ -597,6 +606,21 @@ const Admin = () => {
                       <FaDollarSign className="icon" />
                       <span className="info-value price-value">${provider.price}/hr</span>
                     </div>
+                    {provider.verificationDocument && (
+                      <div className="document-section">
+                        <a 
+                          href={provider.verificationDocument.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="view-document-button"
+                        >
+                          View Document
+                        </a>
+                        <p className="document-info">
+                          {provider.verificationDocument.originalName}
+                        </p>
+                      </div>
+                    )}
                     <div className="provider-actions">
                       <button
                         className="approve-button"
@@ -683,6 +707,12 @@ const Admin = () => {
           </section>
         )}
       </main>
+
+      {isLoading && (
+        <div className="loading-spinner">
+          Loading...
+        </div>
+      )}
     </div>
   );
 };

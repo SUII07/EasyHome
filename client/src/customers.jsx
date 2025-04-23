@@ -140,9 +140,6 @@ const CustomerProfile = () => {
     <div className="profile-container">
       <div className="profile-card">
         <div className="profile-header">
-          <button className="back-button" onClick={handleGoBack}>
-            <FaArrowLeft /> Back
-          </button>
           <h2>My Profile</h2>
         </div>
         <div className="profile-content">

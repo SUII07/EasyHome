@@ -4,6 +4,7 @@ import ServiceProvider from '../models/ServiceProvider.js';
 import { verifyToken as auth } from '../middleware/verifyToken.js';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import Customer from '../models/Customer.js';
 
 dotenv.config();
 
@@ -295,6 +296,195 @@ router.post('/accept/:requestId', auth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error accepting emergency service request',
+      error: error.message
+    });
+  }
+});
+
+// Get emergency requests for a customer
+router.get('/customer-requests', auth, async (req, res) => {
+  try {
+    const customerId = req.user.userId;
+
+    // Find all emergency requests for this customer
+    const requests = await EmergencyService.find({
+      customerId: customerId
+    }).populate('providerId', 'fullName price phoneNumber address rating totalReviews');
+
+    // Format the response to match the expected structure
+    const formattedRequests = requests.map(request => ({
+      ...request.toObject(),
+      providerId: {
+        ...request.providerId.toObject(),
+        fullName: request.providerId.fullName,
+        phoneNumber: request.providerId.phoneNumber,
+        address: request.providerId.address
+      }
+    }));
+
+    console.log('Found customer emergency requests:', formattedRequests);
+
+    res.status(200).json({
+      success: true,
+      requests: formattedRequests,
+      message: `Found ${requests.length} emergency requests`
+    });
+  } catch (error) {
+    console.error('Error fetching customer emergency requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching emergency requests',
+      error: error.message
+    });
+  }
+});
+
+// Update the provider-requests endpoint to return all requests, not just pending
+router.get('/provider-requests', auth, async (req, res) => {
+  try {
+    const providerId = req.user.userId;
+
+    // Find all emergency requests for this provider (not just pending)
+    const requests = await EmergencyService.find({
+      providerId: providerId
+    }).populate('customerId', 'FullName PhoneNumber Address Email');
+
+    // Format the response to match the expected structure
+    const formattedRequests = requests.map(request => {
+      const requestObj = request.toObject();
+      
+      // Handle case where customerId might be null
+      if (!request.customerId) {
+        return {
+          ...requestObj,
+          customerId: {
+            fullName: 'Unknown Customer',
+            phoneNumber: 'N/A',
+            address: 'N/A',
+            email: 'N/A'
+          }
+        };
+      }
+
+      return {
+        ...requestObj,
+        customerId: {
+          ...request.customerId.toObject(),
+          fullName: request.customerId.FullName,
+          phoneNumber: request.customerId.PhoneNumber,
+          address: request.customerId.Address,
+          email: request.customerId.Email
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      requests: formattedRequests
+    });
+  } catch (error) {
+    console.error('Error fetching emergency requests:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching emergency requests',
+      error: error.message
+    });
+  }
+});
+
+// Handle emergency service request response (accept/decline)
+router.put('/response/:requestId', auth, async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { status } = req.body;
+    const providerId = req.user.userId;
+
+    console.log('Processing emergency request response:', {
+      requestId,
+      status,
+      providerId
+    });
+
+    if (!['accepted', 'declined', 'completed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status. Status must be either accepted, declined, or completed'
+      });
+    }
+
+    // Find and update the emergency request
+    const emergencyRequest = await EmergencyService.findOne({
+      _id: requestId,
+      providerId: providerId
+    });
+
+    if (!emergencyRequest) {
+      return res.status(404).json({
+        success: false,
+        message: 'Emergency request not found'
+      });
+    }
+
+    if (emergencyRequest.status !== 'pending' && status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot ${status} request. Current status is ${emergencyRequest.status}`
+      });
+    }
+
+    // Update the request status
+    emergencyRequest.status = status;
+    if (status === 'accepted') {
+      emergencyRequest.responseTime = new Date();
+    }
+
+    await emergencyRequest.save();
+
+    // Try to send email notification to customer
+    try {
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        const customer = await Customer.findById(emergencyRequest.customerId);
+        
+        const emailHtml = `
+          <h2>Emergency Service Request Update</h2>
+          <p>Your emergency service request has been ${status}.</p>
+          <h3>Request Details:</h3>
+          <ul>
+            <li><strong>Service Type:</strong> ${emergencyRequest.serviceType}</li>
+            <li><strong>Address:</strong> ${emergencyRequest.address}</li>
+            <li><strong>Status:</strong> ${status}</li>
+            <li><strong>Price:</strong> $${emergencyRequest.price}/hr</li>
+          </ul>
+          ${status === 'accepted' ? '<p>The service provider will contact you shortly.</p>' : '<p>Please try requesting another service provider.</p>'}
+        `;
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: customer.email,
+          subject: `Emergency Service Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+          html: emailHtml
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Status update email sent to customer');
+      }
+    } catch (emailError) {
+      console.error('Error sending email notification:', emailError);
+      // Continue with the response even if email fails
+    }
+
+    console.log('Emergency request updated successfully:', emergencyRequest);
+
+    res.status(200).json({
+      success: true,
+      message: `Emergency request ${status} successfully`,
+      data: emergencyRequest
+    });
+  } catch (error) {
+    console.error('Error updating emergency request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating emergency request',
       error: error.message
     });
   }
