@@ -5,6 +5,9 @@ import { verifyToken as auth } from '../middleware/verifyToken.js';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import Customer from '../models/Customer.js';
+import mongoose from 'mongoose';
+import axios from 'axios';
+import Booking from '../models/Booking.js';
 
 dotenv.config();
 
@@ -309,7 +312,9 @@ router.get('/customer-requests', auth, async (req, res) => {
     // Find all emergency requests for this customer
     const requests = await EmergencyService.find({
       customerId: customerId
-    }).populate('providerId', 'fullName price phoneNumber address rating totalReviews');
+    })
+    .populate('providerId', 'fullName price phoneNumber address rating totalReviews latitude longitude plusCode')
+    .populate('customerId', 'FullName PhoneNumber Address Email latitude longitude plusCode');
 
     // Format the response to match the expected structure
     const formattedRequests = requests.map(request => ({
@@ -347,7 +352,9 @@ router.get('/provider-requests', auth, async (req, res) => {
     // Find all emergency requests for this provider (not just pending)
     const requests = await EmergencyService.find({
       providerId: providerId
-    }).populate('customerId', 'FullName PhoneNumber Address Email');
+    })
+    .populate('customerId', 'FullName PhoneNumber Address Email latitude longitude plusCode')
+    .populate('providerId', 'fullName price phoneNumber address rating totalReviews latitude longitude plusCode');
 
     // Format the response to match the expected structure
     const formattedRequests = requests.map(request => {

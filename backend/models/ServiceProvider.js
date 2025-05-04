@@ -27,6 +27,29 @@ const serviceProviderSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  latitude: {
+    type: Number,
+    default: null
+  },
+  longitude: {
+    type: Number,
+    default: null
+  },
+  plusCode: {
+    type: String,
+    default: null
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0]
+    }
+  },
   serviceType: {
     type: String,
     required: true,

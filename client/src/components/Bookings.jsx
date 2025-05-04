@@ -15,9 +15,11 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import CustomerMap from './CustomerMap';
 import './Bookings.css';
 
 const BookingCard = ({ booking, onResponse }) => {
+  const [showMap, setShowMap] = useState(false);
   const formattedDate = new Date(booking.bookingDateTime || booking.createdAt).toLocaleString('en-US', {
     weekday: 'short',
     year: 'numeric',
@@ -34,6 +36,34 @@ const BookingCard = ({ booking, onResponse }) => {
   const handleMarkAsComplete = () => {
     onResponse(booking._id, 'completed', booking.isEmergency);
   };
+
+  const handleViewMap = () => {
+    setShowMap(!showMap);
+  };
+
+  // Get coordinates for both parties
+  const getCoordinates = () => {
+    // For customer
+    let customerLat = parseFloat(booking.customerId?.latitude);
+    let customerLng = parseFloat(booking.customerId?.longitude);
+    let customerPlusCode = booking.customerId?.plusCode;
+
+    // For provider
+    let providerLat = parseFloat(booking.providerId?.latitude);
+    let providerLng = parseFloat(booking.providerId?.longitude);
+    let providerPlusCode = booking.providerId?.plusCode;
+
+    return {
+      customerLat,
+      customerLng,
+      customerPlusCode,
+      providerLat,
+      providerLng,
+      providerPlusCode
+    };
+  };
+
+  const coords = getCoordinates();
 
   return (
     <div className={`customer-card ${booking.isEmergency ? 'emergency' : ''}`}>
@@ -97,34 +127,54 @@ const BookingCard = ({ booking, onResponse }) => {
         </div>
       </div>
 
-      {booking.status === 'pending' && (
+      {(booking.status === 'pending' || booking.status === 'accepted') && (
         <div className="card-actions">
-          <button
-            className="decline-button"
-            onClick={() => onResponse(booking._id, 'declined', booking.isEmergency)}
-          >
-            <FaTimes />
-            <span>Decline</span>
+          <button className="view-map-button" onClick={handleViewMap}>
+            <FaMapMarkerAlt />
+            <span>{showMap ? 'Hide Map' : 'View Map'}</span>
           </button>
-          <button
-            className={`accept-button ${booking.isEmergency ? 'emergency' : ''}`}
-            onClick={() => onResponse(booking._id, 'accepted', booking.isEmergency)}
-          >
-            <FaCheck />
-            <span>{booking.isEmergency ? 'Accept Emergency' : 'Accept'}</span>
-          </button>
+          {booking.status === 'pending' && (
+            <>
+              <button
+                className="decline-button"
+                onClick={() => onResponse(booking._id, 'declined', booking.isEmergency)}
+              >
+                <FaTimes />
+                <span>Decline</span>
+              </button>
+              <button
+                className={`accept-button ${booking.isEmergency ? 'emergency' : ''}`}
+                onClick={() => onResponse(booking._id, 'accepted', booking.isEmergency)}
+              >
+                <FaCheck />
+                <span>{booking.isEmergency ? 'Accept Emergency' : 'Accept'}</span>
+              </button>
+            </>
+          )}
+          {booking.status === 'accepted' && (
+            <button
+              className="complete-button"
+              onClick={handleMarkAsComplete}
+            >
+              <FaCheck />
+              <span>Mark as Complete</span>
+            </button>
+          )}
         </div>
       )}
 
-      {booking.status === 'accepted' && (
-        <div className="card-actions">
-          <button
-            className="complete-button"
-            onClick={handleMarkAsComplete}
-          >
-            <FaCheck />
-            <span>Mark as Complete</span>
-          </button>
+      {showMap && (
+        <div className="map-section">
+          <CustomerMap 
+            latitude={coords.customerLat}
+            longitude={coords.customerLng}
+            plusCode={coords.customerPlusCode}
+            address={customerAddress}
+            providerLatitude={coords.providerLat}
+            providerLongitude={coords.providerLng}
+            providerPlusCode={coords.providerPlusCode}
+            providerName={booking.providerId?.fullName || booking.providerId?.FullName}
+          />
         </div>
       )}
     </div>

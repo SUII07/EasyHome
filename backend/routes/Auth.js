@@ -9,6 +9,7 @@ import Admin from '../models/admin.js'
 import multer from 'multer'
 import cloudinary from '../config/cloudinary.js'
 import nodemailer from 'nodemailer'
+import { geocodeAddress } from '../utils/geocoding.js'
 
 const AuthRoutes = express.Router()
 
@@ -103,6 +104,9 @@ AuthRoutes.post('/register', upload.single('verificationDocument'), async (req, 
       }
     }
 
+    // Geocode the address
+    const geocodedAddress = await geocodeAddress(address);
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -113,7 +117,16 @@ AuthRoutes.post('/register', upload.single('verificationDocument'), async (req, 
         Email: email,
         PhoneNumber: phoneNumber,
         password: hashedPassword,
-        Address: address
+        Address: address,
+        latitude: geocodedAddress.latitude,
+        longitude: geocodedAddress.longitude,
+        plusCode: geocodedAddress.plusCode,
+        location: {
+          type: 'Point',
+          coordinates: geocodedAddress.longitude && geocodedAddress.latitude 
+            ? [geocodedAddress.longitude, geocodedAddress.latitude]
+            : [0, 0]
+        }
       })
     } else if (role === "serviceprovider") {
       // Upload document to Cloudinary
@@ -132,6 +145,15 @@ AuthRoutes.post('/register', upload.single('verificationDocument'), async (req, 
         phoneNumber,
         password: hashedPassword,
         address,
+        latitude: geocodedAddress.latitude,
+        longitude: geocodedAddress.longitude,
+        plusCode: geocodedAddress.plusCode,
+        location: {
+          type: 'Point',
+          coordinates: geocodedAddress.longitude && geocodedAddress.latitude 
+            ? [geocodedAddress.longitude, geocodedAddress.latitude]
+            : [0, 0]
+        },
         serviceType,
         price: parseFloat(price),
         verificationStatus: "pending",
@@ -199,7 +221,8 @@ AuthRoutes.post('/register', upload.single('verificationDocument'), async (req, 
         id: user._id,
         fullName: user.fullName,
         email: user.email,
-        role
+        role,
+        plusCode: user.plusCode
       }
     })
   } catch (error) {

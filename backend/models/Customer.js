@@ -13,6 +13,17 @@ const customerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0]
+    }
+  },
   Email: {
     type: String,
     required: true,

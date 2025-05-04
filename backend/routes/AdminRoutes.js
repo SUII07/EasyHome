@@ -9,6 +9,7 @@ import {
   deleteServiceProvider,
   uploadProfilePicture
 } from "../controllers/AdminController.js";
+import { getAnalytics } from "../controllers/AnalyticsController.js";
 import multer from 'multer';
 import ServiceProvider from "../models/ServiceProvider.js";
 import Customer from "../models/Customer.js";
@@ -199,5 +200,8 @@ AdminRoutes.put("/reject-provider/:providerId", isAdmin, async (req, res) => {
 
 // Delete user (consolidated route)
 AdminRoutes.delete("/delete/:userId", isAdmin, deleteUser);
+
+// Add this new route before export
+AdminRoutes.get('/analytics', isAdmin, getAnalytics);
 
 export default AdminRoutes;

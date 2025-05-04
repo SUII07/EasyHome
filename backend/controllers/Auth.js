@@ -4,6 +4,7 @@ import AdminModel from "../models/admin.js";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import cloudinary from '../config/cloudinary.js';
+import { geocodeAddress } from '../utils/geocoding.js';
 
 // Register function
 const register = async (req, res) => {
@@ -267,29 +268,114 @@ const getUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const { fullName, email, phoneNumber, address, serviceType, price } = req.body;
 
-    // Remove sensitive fields from updates
-    delete updates.password;
-    delete updates.role;
+    // Find the user by ID and role
+    let user = null;
+    let userType = null;
 
-    // Try to update in all collections (only one will succeed)
-    const [updatedAdmin, updatedCustomer, updatedServiceProvider] = await Promise.all([
-      AdminModel.findByIdAndUpdate(id, updates, { new: true }).select('-password'),
-      CustomerModel.findByIdAndUpdate(id, updates, { new: true }).select('-password'),
-      ServiceProviderModel.findByIdAndUpdate(id, updates, { new: true }).select('-password')
-    ]);
-
-    const updatedUser = updatedAdmin || updatedCustomer || updatedServiceProvider;
-
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    // Try each model in sequence
+    if (!user) {
+      user = await CustomerModel.findById(id);
+      if (user) userType = 'customer';
+    }
+    
+    if (!user) {
+      user = await ServiceProviderModel.findById(id);
+      if (user) userType = 'serviceprovider';
+    }
+    
+    if (!user) {
+      user = await AdminModel.findById(id);
+      if (user) userType = 'admin';
     }
 
-    res.status(200).json(updatedUser);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update user fields
+    if (fullName) {
+      if (userType === 'customer' || userType === 'admin') {
+        user.FullName = fullName;
+      } else {
+        user.fullName = fullName;
+      }
+    }
+
+    if (email) {
+      if (userType === 'customer' || userType === 'admin') {
+        user.Email = email;
+      } else {
+        user.email = email;
+      }
+    }
+
+    if (phoneNumber) {
+      if (userType === 'customer' || userType === 'admin') {
+        user.PhoneNumber = phoneNumber;
+      } else {
+        user.phoneNumber = phoneNumber;
+      }
+    }
+
+    if (address) {
+      // Geocode the new address
+      const geocodedAddress = await geocodeAddress(address);
+
+      if (userType === 'customer' || userType === 'admin') {
+        user.Address = address;
+        user.latitude = geocodedAddress.latitude;
+        user.longitude = geocodedAddress.longitude;
+        user.plusCode = geocodedAddress.plusCode;
+        user.location = {
+          type: 'Point',
+          coordinates: geocodedAddress.longitude && geocodedAddress.latitude 
+            ? [geocodedAddress.longitude, geocodedAddress.latitude]
+            : [0, 0]
+        };
+      } else {
+        user.address = address;
+        user.latitude = geocodedAddress.latitude;
+        user.longitude = geocodedAddress.longitude;
+        user.plusCode = geocodedAddress.plusCode;
+        user.location = {
+          type: 'Point',
+          coordinates: geocodedAddress.longitude && geocodedAddress.latitude 
+            ? [geocodedAddress.longitude, geocodedAddress.latitude]
+            : [0, 0]
+        };
+      }
+    }
+
+    // Update service provider specific fields
+    if (userType === 'serviceprovider') {
+      if (serviceType) {
+        user.serviceType = serviceType;
+      }
+      if (price) {
+        user.price = parseFloat(price);
+      }
+    }
+
+    await user.save();
+
+    // Return updated user data
+    const userData = {
+      id: user._id,
+      fullName: userType === 'admin' || userType === 'customer' ? user.FullName : user.fullName,
+      email: userType === 'admin' || userType === 'customer' ? user.Email : user.email,
+      role: userType,
+      plusCode: user.plusCode
+    };
+
+    res.json({
+      message: "User updated successfully",
+      user: userData
+    });
   } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ success: false, message: "Error updating user data" });
+    console.error("Update user error:", error);
+    res.status(500).json({ message: "Failed to update user", error: error.message });
   }
 };
 

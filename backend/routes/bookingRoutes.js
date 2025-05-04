@@ -37,7 +37,8 @@ router.get('/requests', verifyToken, async (req, res) => {
       providerId: req.user.userId,
       status: 'pending'
     })
-    .populate('customerId', 'FullName Address PhoneNumber')
+    .populate('customerId', 'FullName Address PhoneNumber latitude longitude plusCode')
+    .populate('providerId', 'fullName address phoneNumber latitude longitude plusCode price')
     .sort({ bookingDateTime: -1 });
 
     // Format the response to handle null customerId
@@ -207,7 +208,7 @@ router.put('/response/:bookingId', verifyToken, async (req, res) => {
       },
       { status },
       { new: true }
-    ).populate('customerId', 'FullName Email PhoneNumber');
+    ).populate('customerId', 'FullName Email PhoneNumber latitude longitude plusCode');
 
     if (!booking) {
       return res.status(404).json({
@@ -287,10 +288,10 @@ router.get('/', verifyToken, async (req, res) => {
     const bookings = await Booking.find(query)
       .populate({
         path: 'customerId',
-        select: 'FullName Address PhoneNumber Email',
+        select: 'FullName Address PhoneNumber Email latitude longitude plusCode',
         model: 'Customer'
       })
-      .populate('providerId', 'fullName price')
+      .populate('providerId', 'fullName address phoneNumber latitude longitude plusCode price')
       .sort({ bookingDateTime: -1 });
 
     console.log('Found bookings:', bookings);
@@ -335,8 +336,8 @@ router.get('/history', verifyToken, async (req, res) => {
     }
 
     const bookings = await Booking.find(query)
-      .populate('customerId', 'fullName address phoneNumber')
-      .populate('providerId', 'fullName price')
+      .populate('customerId', 'fullName address phoneNumber latitude longitude plusCode')
+      .populate('providerId', 'fullName address phoneNumber latitude longitude plusCode price')
       .sort({ bookingDateTime: -1 });
 
     res.json({
@@ -458,6 +459,7 @@ router.get('/', verifyToken, async (req, res) => {
 
     const bookings = await Booking.find(query)
       .populate('customerId', 'fullName')
+      .populate('providerId', 'fullName address phoneNumber latitude longitude plusCode price')
       .sort({ bookingDateTime: -1 });
 
     res.json(bookings);

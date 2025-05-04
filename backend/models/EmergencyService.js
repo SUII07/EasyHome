@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import axios from 'axios';
 
 const emergencyServiceSchema = new mongoose.Schema({
   customerId: {
@@ -39,6 +40,10 @@ const emergencyServiceSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  customerLocation: {
+    lat: { type: Number },
+    lon: { type: Number }
   }
 });
 

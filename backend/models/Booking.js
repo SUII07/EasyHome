@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import axios from 'axios';
 
 const bookingSchema = new mongoose.Schema({
   customerId: {
@@ -36,6 +37,10 @@ const bookingSchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  customerLocation: {
+    lat: { type: Number },
+    lon: { type: Number }
   }
 }, {
   timestamps: true

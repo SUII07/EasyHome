@@ -1,9 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes, FaTools, FaMapMarkerAlt, FaPhone, FaRegClock, FaDollarSign } from "react-icons/fa";
+import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes, FaTools, FaMapMarkerAlt, FaPhone, FaRegClock, FaDollarSign, FaCalendarAlt } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import "./Admin.css";
 import axios from "axios";
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Admin = () => {
   const [users, setUsers] = useState([]);
@@ -23,6 +43,11 @@ const Admin = () => {
   const location = useLocation();
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
 
   // Fetch admin's name from localStorage on component mount
   useEffect(() => {
@@ -296,6 +321,8 @@ const Admin = () => {
         return "Customer Management";
       case "/admin/serviceproviders":
         return "Service Provider Management";
+      case "/admin/analytics":
+        return "Analytics Dashboard";
       default:
         return "Admin Dashboard";
     }
@@ -446,6 +473,135 @@ const Admin = () => {
     }, 300);
   };
 
+  const fetchAnalyticsData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      let url = 'http://localhost:4000/api/admin/analytics';
+      if (dateRange.startDate && dateRange.endDate) {
+        url += `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setAnalyticsData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      toast.error('Failed to fetch analytics data');
+    }
+  };
+
+  useEffect(() => {
+    if (location.pathname === "/admin/analytics") {
+      fetchAnalyticsData();
+    }
+  }, [location.pathname, dateRange]);
+
+  const renderAnalyticsChart = () => {
+    if (!analyticsData) return <div className="loading-analytics">Loading analytics...</div>;
+
+    const data = {
+      labels: ['Customers', 'Service Providers'],
+      datasets: [
+        {
+          label: ' ',  // Empty label
+          data: [
+            analyticsData.totalCustomers,
+            analyticsData.totalServiceProviders
+          ],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 99, 132, 0.8)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1,
+          borderRadius: 8,
+        },
+      ],
+    };
+
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false, // Hide the legend since we don't need it
+        },
+        title: {
+          display: true,
+          text: 'EasyHome User Statistics',
+          font: {
+            size: 20,
+            family: "'Segoe UI', sans-serif",
+            weight: 'bold'
+          },
+          padding: {
+            top: 10,
+            bottom: 30
+          }
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: {
+              size: 12
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.1)'
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 14,
+              weight: '500'
+            }
+          }
+        }
+      }
+    };
+
+    return (
+      <div className="analytics-container">
+        <div className="chart-container">
+          <Bar data={data} options={options} />
+        </div>
+        <div className="analytics-cards">
+          <div className="analytics-card">
+            <FaUsers className="card-icon" />
+            <h3>Total Customers</h3>
+            <p>{analyticsData.totalCustomers}</p>
+          </div>
+          <div className="analytics-card">
+            <FaUserTie className="card-icon" />
+            <h3>Service Providers</h3>
+            <p>{analyticsData.totalServiceProviders}</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="admin-container">
@@ -504,17 +660,14 @@ const Admin = () => {
               </button>
             </li>
             <li className="nav-item">
-              <button className="nav-link">
+              <button 
+                onClick={() => handleNavigation("/admin/analytics")} 
+                className={`nav-link ${location.pathname === "/admin/analytics" ? "active" : ""}`}
+              >
                 <FaChartBar className="icon" />
                 Analytics
               </button>
             </li>
-            {/* <li className="nav-item">
-              <button className="nav-link">
-                <FaCog className="icon" />
-                Settings
-              </button>
-            </li> */}
           </ul>
         </nav>
         <div className="logout">
@@ -531,10 +684,6 @@ const Admin = () => {
             <h1>{getCurrentPageTitle()}</h1>
           </div>
           <div className="header-right">
-            {/* <div className="notifications">
-              <FaBell className="icon" />
-              {notifications > 0 && <span className="notification-badge">{notifications}</span>}
-            </div> */}
             <div className="profile" onClick={handleProfileClick} style={{ cursor: 'pointer' }}>
               <FaUserCircle className="profile-icon" />
               <span>{adminName || 'Admin'}</span>
@@ -641,6 +790,13 @@ const Admin = () => {
             ) : (
               <p className="no-data">No pending service provider requests</p>
             )}
+          </section>
+        )}
+
+        {location.pathname === "/admin/analytics" && (
+          <section className="analytics-section">
+            <h2>Analytics Overview</h2>
+            {renderAnalyticsChart()}
           </section>
         )}
 

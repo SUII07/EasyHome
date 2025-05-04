@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { OpenLocationCode } from 'open-location-code';
 
 const DbCon=async()=>{
     try{

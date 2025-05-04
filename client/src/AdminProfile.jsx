@@ -1,12 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaSave, FaArrowLeft, FaHome, FaUsers, FaUserTie, FaChartBar, FaCog, FaSignOutAlt, FaPencilAlt, FaTrash, FaCamera } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaChartBar, FaSave, FaArrowLeft, FaHome, FaUsers, FaUserTie, FaCog, FaSignOutAlt, FaPencilAlt, FaTrash, FaCamera, FaSearch, FaUserCircle, FaBell, FaEdit, FaCheck, FaTimes, FaTools, FaRegClock, FaDollarSign, FaCalendarAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import './AdminProfile.css';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
 const AdminProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +38,7 @@ const AdminProfile = () => {
     PhoneNumber: '',
     Address: '',
   });
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -270,6 +282,14 @@ const AdminProfile = () => {
     }
   };
 
+  const handleNavigation = (path) => {
+    setIsPageTransitioning(true);
+    setTimeout(() => {
+      navigate(path);
+      setIsPageTransitioning(false);
+    }, 300);
+  };
+
   if (isLoading) {
     return (
       <div className="admin-dashboard">
@@ -288,33 +308,39 @@ const AdminProfile = () => {
         <nav>
           <ul>
             <li className="nav-item">
-              <button onClick={() => navigate("/admin")} className="nav-link">
+              <button 
+                onClick={() => handleNavigation("/admin")} 
+                className={`nav-link ${location.pathname === "/admin" ? "active" : ""}`}
+              >
                 <FaHome className="icon" />
                 Dashboard
               </button>
             </li>
             <li className="nav-item">
-              <button onClick={() => navigate("/admin/customers")} className="nav-link">
+              <button 
+                onClick={() => handleNavigation("/admin/customers")} 
+                className={`nav-link ${location.pathname === "/admin/customers" ? "active" : ""}`}
+              >
                 <FaUsers className="icon" />
                 Customers
               </button>
             </li>
             <li className="nav-item">
-              <button onClick={() => navigate("/admin/serviceproviders")} className="nav-link">
+              <button 
+                onClick={() => handleNavigation("/admin/serviceproviders")} 
+                className={`nav-link ${location.pathname === "/admin/serviceproviders" ? "active" : ""}`}
+              >
                 <FaUserTie className="icon" />
                 Service Providers
               </button>
             </li>
             <li className="nav-item">
-              <button className="nav-link">
+              <button 
+                onClick={() => handleNavigation("/admin/analytics")} 
+                className={`nav-link ${location.pathname === "/admin/analytics" ? "active" : ""}`}
+              >
                 <FaChartBar className="icon" />
                 Analytics
-              </button>
-            </li>
-            <li className="nav-item">
-              <button className="nav-link">
-                <FaCog className="icon" />
-                Settings
               </button>
             </li>
           </ul>

@@ -1,8 +1,19 @@
 {
   "dependencies": {
-    "cloudinary": "^2.6.0",
-    "multer": "^1.4.5-lts.2",
+    "@emotion/styled": "^11.11.0",
     "@fortawesome/react-fontawesome": "^0.2.0",
-    "@emotion/styled": "^11.11.0"
+    "axios": "^1.9.0",
+    "bcrypt": "^5.1.1",
+    "chart.js": "^4.4.9",
+    "cloudinary": "^2.6.0",
+    "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
+    "limiter": "^3.0.0",
+    "multer": "^1.4.5-lts.2",
+    "open-location-code": "^1.0.3",
+    "react-chartjs-2": "^5.3.0",
+    "react-leaflet": "^5.0.0",
+    "socket.io-client": "^4.8.1",
+    "winston": "^3.17.0"
   }
 }

@@ -890,3 +890,137 @@ nav {
   margin: 5px 0 0 0;
   word-break: break-all;
 }
+
+/* Analytics Section Styles */
+.analytics-section {
+  padding: 2rem;
+  background: #f8fafc;
+}
+
+.analytics-section h2 {
+  font-size: 1.8rem;
+  color: #1a1f37;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.analytics-container {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.loading-analytics {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.chart-container {
+  height: 400px;
+  margin: 0 auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-top: 2rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.analytics-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.analytics-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card .card-icon {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-card h3 {
+  font-size: 1.2rem;
+  color: #64748b;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.analytics-card p {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1f37;
+  margin: 0;
+}
+
+/* Color variations for the two cards */
+.analytics-card:nth-child(1) {
+  background: linear-gradient(145deg, #fff, #f0f9ff);
+}
+.analytics-card:nth-child(1) .card-icon { color: #3b82f6; }
+
+.analytics-card:nth-child(2) {
+  background: linear-gradient(145deg, #fff, #fdf2f8);
+}
+.analytics-card:nth-child(2) .card-icon { color: #ec4899; }
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .analytics-section {
+    padding: 1.5rem;
+  }
+
+  .chart-container {
+    height: 350px;
+  }
+
+  .analytics-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-section {
+    padding: 1rem;
+  }
+
+  .chart-container {
+    height: 300px;
+  }
+
+  .analytics-cards {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    gap: 1.5rem;
+  }
+
+  .analytics-card {
+    padding: 1.5rem;
+  }
+
+  .analytics-card .card-icon {
+    font-size: 2.5rem;
+  }
+
+  .analytics-card p {
+    font-size: 2rem;
+  }
+}

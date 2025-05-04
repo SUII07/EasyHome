@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { FaCalendarAlt, FaTools, FaDollarSign, FaUser, FaMapMarkerAlt, FaPhone, FaFilter, FaStar, FaTimes, FaArrowLeft } from 'react-icons/fa';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import CustomerMap from '../components/CustomerMap';
 import './MyBookings.css';
 
 const MyBookings = () => {
@@ -222,6 +223,7 @@ const MyBookings = () => {
     const [localRating, setLocalRating] = useState(0);
     const [localReview, setLocalReview] = useState('');
     const [hoveredStar, setHoveredStar] = useState(0);
+    const [showMap, setShowMap] = useState(false);
 
     // Format the date based on whether it's an emergency booking or regular booking
     const getFormattedDate = () => {
@@ -269,6 +271,34 @@ const MyBookings = () => {
         toast.error(error.message || 'Failed to submit rating');
       }
     };
+
+    const handleViewMap = () => {
+      setShowMap(!showMap);
+    };
+
+    // Get coordinates for both parties
+    const getCoordinates = () => {
+      // For customer
+      let customerLat = parseFloat(booking.customerId?.latitude);
+      let customerLng = parseFloat(booking.customerId?.longitude);
+      let customerPlusCode = booking.customerId?.plusCode;
+
+      // For provider
+      let providerLat = parseFloat(booking.providerId?.latitude);
+      let providerLng = parseFloat(booking.providerId?.longitude);
+      let providerPlusCode = booking.providerId?.plusCode;
+
+      return {
+        customerLat,
+        customerLng,
+        customerPlusCode,
+        providerLat,
+        providerLng,
+        providerPlusCode
+      };
+    };
+
+    const coords = getCoordinates();
     
     return (
       <div className={`booking-card ${booking.isEmergency ? 'emergency' : ''}`}>
@@ -328,6 +358,31 @@ const MyBookings = () => {
             </div>
           )}
         </div>
+
+        {/* View Map button only for accepted bookings */}
+        {booking.status === 'accepted' && otherParty?.address && (
+          <div className="view-map-button-container">
+            <button className="view-map-button" onClick={handleViewMap}>
+              <FaMapMarkerAlt />
+              <span>{showMap ? 'Hide Map' : 'View Map'}</span>
+            </button>
+          </div>
+        )}
+
+        {showMap && (
+          <div className="map-section">
+            <CustomerMap 
+              latitude={coords.customerLat}
+              longitude={coords.customerLng}
+              plusCode={coords.customerPlusCode}
+              address={booking.customerId?.Address || booking.customerId?.address}
+              providerLatitude={coords.providerLat}
+              providerLongitude={coords.providerLng}
+              providerPlusCode={coords.providerPlusCode}
+              providerName={booking.providerId?.fullName || booking.providerId?.FullName}
+            />
+          </div>
+        )}
 
         {canRate && !isRating && (
           <div className="rate-button-container">

@@ -50,6 +50,12 @@ function App() {
         <Route path="/user/serviceproviders" element={<ServiceProviderCard />} />
         <Route path="/profile" element={<CustomerProfile />} />
         <Route path="/my-bookings" element={<MyBookings />} />
+
+        {/* New routes for Admin */}
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/customers" element={<Admin />} />
+        <Route path="/admin/serviceproviders" element={<Admin />} />
+        <Route path="/admin/analytics" element={<Admin />} />
       </Routes>
     </BrowserRouter>
   );
