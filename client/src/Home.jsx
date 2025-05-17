@@ -5,6 +5,8 @@ import { FaBroom, FaBolt, FaPaintRoller, FaWrench, FaSnowflake, FaArrowRight, Fa
 import { toast } from "react-hot-toast";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import { FaHammer } from "react-icons/fa";
+
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,6 +114,12 @@ const Home = () => {
       description: "Heating and cooling system services",
       icon: <FaSnowflake />,
       link: "/providers/hvac"
+    },
+    {
+      title: "Carpentry",
+      description: "Expert carpentry services",
+      icon: <FaHammer />,
+      link: "/providers/carpentry"
     }
   ];
 

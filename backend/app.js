@@ -1,10 +1,11 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const emergencyRoutes = require('./routes/emergencyService');
-const authRoutes = require('./routes/auth');
-const bookingRoutes = require('./routes/bookings');
-const serviceProviderRoutes = require('./routes/serviceProvider');
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import emergencyRoutes from './routes/emergencyService.js';
+import authRoutes from './routes/auth.js';
+import bookingRoutes from './routes/bookings.js';
+import serviceProviderRoutes from './routes/serviceProvider.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/serviceprovider', serviceProviderRoutes);
 app.use('/api/emergency', emergencyRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

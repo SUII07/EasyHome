@@ -22,7 +22,6 @@ const Sidebar = ({ activeSection, onSectionChange }) => {
   const menuItems = [
     { id: 'dashboard', icon: <FaUserCircle />, label: 'Dashboard' },
     { id: 'bookings', icon: <FaCalendarAlt />, label: 'Bookings' },
-    { id: 'earnings', icon: <FaDollarSign />, label: 'Earnings' },
     { id: 'reviews', icon: <FaStar />, label: 'Reviews' },
     { id: 'profile', icon: <FaUser />, label: 'Profile' },
   ];

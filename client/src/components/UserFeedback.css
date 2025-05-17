@@ -1,0 +1,112 @@
+.user-feedback-container {
+    padding: 5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.user-feedback-container h2 {
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feedback-item {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.response-status {
+    background-color: #28a745;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.feedback-content {
+    margin-bottom: 1rem;
+}
+
+.feedback-content h3 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.feedback-content p {
+    color: #666;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.admin-response {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
+
+.admin-response h3 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.admin-response p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+    white-space: pre-wrap;
+}
+
+.response-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.no-messages {
+    text-align: center;
+    color: #6c757d;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.status-message {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.status-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+} 

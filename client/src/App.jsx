@@ -18,6 +18,9 @@ import MyBookings from './pages/MyBookings';
 import Landing from './Landing';
 import AdminProfile from './AdminProfile';
 import ProviderDetailView from './components/ProviderDetailView';
+import AboutUs from './pages/AboutUs';
+import UserFeedback from './components/UserFeedback';
+import ForgotPassword from './ForgotPassword';
 
 function App() {
   return (
@@ -30,6 +33,7 @@ function App() {
         {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Role-based Dashboard Routes */}
         <Route path="/admin/*" element={<Admin />} />
@@ -56,6 +60,10 @@ function App() {
         <Route path="/admin/customers" element={<Admin />} />
         <Route path="/admin/serviceproviders" element={<Admin />} />
         <Route path="/admin/analytics" element={<Admin />} />
+
+        {/* About Us and Feedback Routes */}
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/feedback" element={<UserFeedback />} />
       </Routes>
     </BrowserRouter>
   );

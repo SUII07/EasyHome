@@ -10,6 +10,7 @@ import multer from 'multer'
 import cloudinary from '../config/cloudinary.js'
 import nodemailer from 'nodemailer'
 import { geocodeAddress } from '../utils/geocoding.js'
+import { generateOTP, sendOTP, storeOTP, verifyOTP } from '../utils/otpManager.js'
 
 const AuthRoutes = express.Router()
 
@@ -336,5 +337,223 @@ AuthRoutes.post('/logout', (req, res) => {
 AuthRoutes.get('/user/:id', verifyToken, getUser)
 AuthRoutes.put('/update/:id', verifyToken, updateUser)
 AuthRoutes.delete('/delete/:id', verifyToken, deleteUser)
+
+// Generate and send OTP for customer registration
+AuthRoutes.post('/generate-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    // Check if email already exists
+    const existingUser = await Promise.all([
+      Customer.findOne({ Email: email }),
+      ServiceProvider.findOne({ email }),
+      Admin.findOne({ Email: email })
+    ]);
+
+    if (existingUser.some(user => user !== null)) {
+      return res.status(400).json({ success: false, message: "Email already registered" });
+    }
+
+    // Generate and send OTP
+    const otp = generateOTP();
+    await sendOTP(email, otp);
+    storeOTP(email, otp);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "OTP sent successfully" 
+    });
+  } catch (error) {
+    console.error("Error generating OTP:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to send OTP" 
+    });
+  }
+});
+
+// Verify OTP and complete registration
+AuthRoutes.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp, userData } = req.body;
+
+    if (!email || !otp || !userData) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email, OTP, and user data are required" 
+      });
+    }
+
+    // Verify OTP
+    const verificationResult = verifyOTP(email, otp);
+    if (!verificationResult.valid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: verificationResult.message 
+      });
+    }
+
+    // Proceed with registration
+    const { fullName, phoneNumber, address, password, confirmPassword } = userData;
+
+    // Validate required fields
+    if (!fullName || !phoneNumber || !address || !password || !confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Passwords do not match" 
+      });
+    }
+
+    // Geocode the address
+    const geocodedAddress = await geocodeAddress(address);
+
+    // Create new customer
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newCustomer = new Customer({
+      FullName: fullName,
+      Email: email,
+      PhoneNumber: phoneNumber,
+      password: hashedPassword,
+      Address: address,
+      latitude: geocodedAddress.latitude,
+      longitude: geocodedAddress.longitude,
+      plusCode: geocodedAddress.plusCode,
+      location: {
+        type: 'Point',
+        coordinates: geocodedAddress.longitude && geocodedAddress.latitude 
+          ? [geocodedAddress.longitude, geocodedAddress.latitude]
+          : [0, 0]
+      },
+      role: "customer"
+    });
+
+    await newCustomer.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Registration completed successfully"
+    });
+  } catch (error) {
+    console.error("Error verifying OTP:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Registration failed" 
+    });
+  }
+});
+
+// Forgot Password - Generate OTP
+AuthRoutes.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    // Check if email exists in any collection
+    const existingUser = await Promise.all([
+      Customer.findOne({ Email: email }),
+      ServiceProvider.findOne({ email }),
+      Admin.findOne({ Email: email })
+    ]);
+
+    const user = existingUser.find(user => user !== null);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "No account found with this email" });
+    }
+
+    // Generate and send OTP
+    const otp = generateOTP();
+    await sendOTP(email, otp);
+    storeOTP(email, otp);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "OTP sent successfully" 
+    });
+  } catch (error) {
+    console.error("Error in forgot password:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to process request" 
+    });
+  }
+});
+
+// Verify OTP and Reset Password
+AuthRoutes.post('/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword, confirmPassword } = req.body;
+
+    if (!email || !otp || !newPassword || !confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
+    }
+
+    // Verify OTP
+    const verificationResult = verifyOTP(email, otp);
+    if (!verificationResult.valid) {
+      return res.status(400).json({ 
+        success: false, 
+        message: verificationResult.message 
+      });
+    }
+
+    // Validate password match
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Passwords do not match" 
+      });
+    }
+
+    // Find user in any collection
+    let user = await Customer.findOne({ Email: email });
+    if (!user) {
+      user = await ServiceProvider.findOne({ email });
+    }
+    if (!user) {
+      user = await Admin.findOne({ Email: email });
+    }
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful"
+    });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to reset password" 
+    });
+  }
+});
 
 export default AuthRoutes

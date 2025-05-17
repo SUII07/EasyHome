@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes, FaTools, FaMapMarkerAlt, FaPhone, FaRegClock, FaDollarSign, FaCalendarAlt } from "react-icons/fa";
+import { FaHome, FaUsers, FaUserTie, FaSignOutAlt, FaSearch, FaTrash, FaUserCircle, FaChartBar, FaBell, FaCog, FaEdit, FaCheck, FaTimes, FaTools, FaMapMarkerAlt, FaPhone, FaRegClock, FaDollarSign, FaCalendarAlt, FaEnvelope } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import "./Admin.css";
 import axios from "axios";
@@ -14,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import AdminFeedback from "./AdminFeedback";
 
 // Register ChartJS components
 ChartJS.register(
@@ -39,6 +40,10 @@ const Admin = () => {
   const [pendingProviders, setPendingProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [responseText, setResponseText] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTimeout, setSearchTimeout] = useState(null);
@@ -89,6 +94,12 @@ const Admin = () => {
       fetchPendingProviders();
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (location.pathname === "/admin/messages") {
+      fetchMessages();
+    }
+  }, [location.pathname]);
 
   const fetchUsers = async (role, search) => {
     setIsLoading(true);
@@ -323,6 +334,8 @@ const Admin = () => {
         return "Service Provider Management";
       case "/admin/analytics":
         return "Analytics Dashboard";
+      case "/admin/messages":
+        return "Messages";
       default:
         return "Admin Dashboard";
     }
@@ -602,6 +615,159 @@ const Admin = () => {
     );
   };
 
+  const fetchMessages = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.get(
+        'http://localhost:4000/api/messages/admin',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setMessages(response.data.messages);
+        setUnreadMessages(response.data.messages.filter(msg => !msg.read).length);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast.error('Failed to fetch messages');
+    }
+  };
+
+  const markMessageAsRead = async (messageId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.patch(
+        `http://localhost:4000/api/messages/${messageId}/read`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        fetchMessages();
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      toast.error('Failed to mark message as read');
+    }
+  };
+
+  const handleRespondToMessage = async (messageId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.post(
+        `http://localhost:4000/api/messages/${messageId}/respond`,
+        { response_text: responseText },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        toast.success('Response sent successfully');
+        setResponseText('');
+        setSelectedMessage(null);
+        fetchMessages();
+      }
+    } catch (error) {
+      console.error('Error responding to message:', error);
+      toast.error('Failed to send response');
+    }
+  };
+
+  const renderMessages = () => {
+    if (isLoading) {
+      return <div className="loading-messages">Loading messages...</div>;
+    }
+
+    if (!messages.length) {
+      return <div className="no-messages">No messages found</div>;
+    }
+
+    return (
+      <div className="messages-container">
+        {messages.map((message) => (
+          <div 
+            key={message._id} 
+            className={`message-card ${!message.read ? 'unread' : ''}`}
+            onClick={() => {
+              setSelectedMessage(message);
+              if (!message.read) {
+                markMessageAsRead(message._id);
+              }
+            }}
+          >
+            <div className="message-header">
+              <h3>{message.subject || 'Feedback Message'}</h3>
+              <span className="message-date">
+                {new Date(message.created_at).toLocaleDateString()}
+              </span>
+            </div>
+            <div className="message-sender">
+              <FaUserCircle className="sender-icon" />
+              <span>{message.user_id?.FullName || 'Unknown User'}</span>
+            </div>
+            <p className="message-content">{message.message_text}</p>
+            {!message.read && <span className="unread-badge">New</span>}
+            
+            {selectedMessage?._id === message._id && (
+              <div className="message-response">
+                {message.response_text ? (
+                  <div className="existing-response">
+                    <h4>Your Response:</h4>
+                    <p>{message.response_text}</p>
+                    <span className="response-date">
+                      Responded on: {new Date(message.responded_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="response-form">
+                    <textarea
+                      value={responseText}
+                      onChange={(e) => setResponseText(e.target.value)}
+                      placeholder="Type your response here..."
+                      rows={4}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRespondToMessage(message._id);
+                      }}
+                      className="send-response-button"
+                    >
+                      Send Response
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="admin-container">
@@ -668,6 +834,15 @@ const Admin = () => {
                 Analytics
               </button>
             </li>
+            <li className="nav-item">
+              <button 
+                onClick={() => handleNavigation("/admin/messages")} 
+                className={`nav-link ${location.pathname === "/admin/messages" ? "active" : ""}`}
+              >
+                <FaEnvelope className="icon" />
+                Messages
+              </button>
+            </li>
           </ul>
         </nav>
         <div className="logout">
@@ -700,7 +875,6 @@ const Admin = () => {
               <div className="card-content">
                 <h3>Total Customers</h3>
                 <p className="count">{customerCount}</p>
-                <span className="trend positive">+12% this month</span>
               </div>
             </div>
             <div className="overview-card">
@@ -710,7 +884,6 @@ const Admin = () => {
               <div className="card-content">
                 <h3>Service Providers</h3>
                 <p className="count">{serviceProviderCount}</p>
-                <span className="trend positive">+8% this month</span>
               </div>
             </div>
           </section>
@@ -797,6 +970,12 @@ const Admin = () => {
           <section className="analytics-section">
             <h2>Analytics Overview</h2>
             {renderAnalyticsChart()}
+          </section>
+        )}
+
+        {location.pathname === "/admin/messages" && (
+          <section className="messages-section">
+            <AdminFeedback />
           </section>
         )}
 

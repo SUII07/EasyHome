@@ -21,6 +21,9 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [verificationDocument, setVerificationDocument] = useState(null);
   const [documentError, setDocumentError] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
 
   const navigate = useNavigate();
 
@@ -50,6 +53,25 @@ const Register = () => {
       
       setDocumentError("");
       setVerificationDocument(file);
+    }
+  };
+
+  const handleGenerateOTP = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post("http://localhost:4000/api/auth/generate-otp", {
+        email: Email
+      });
+      
+      if (response.data.success) {
+        toast.success("OTP sent to your email!");
+        setShowOtpInput(true);
+        setIsOtpSent(true);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -106,112 +128,106 @@ const Register = () => {
     }
 
     try {
-      let requestData;
-      const isAdmin = Email.includes(".admin@");
+      if (Role === "customer") {
+        if (!isOtpSent) {
+          await handleGenerateOTP();
+          return;
+        }
 
-      if (isAdmin) {
-        // Admin registration data
-        requestData = {
-          fullName: FullName.trim(),
-          phoneNumber: phoneInt,
-          address: Address.trim(),
-          email: Email.trim().toLowerCase(),
-          password: Password,
-          confirmPassword: ConfirmPassword,
-          role: "admin"
-        };
-      } else if (Role === "serviceprovider") {
-        // Validate service provider specific fields
-        if (!ServiceType || !Price) {
-          toast.error("Please fill in all service provider details!");
+        if (!otp) {
+          toast.error("Please enter the OTP sent to your email!");
           setIsLoading(false);
           return;
         }
 
-        const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services", "carpentry"];
-        if (!validServiceTypes.includes(ServiceType.toLowerCase())) {
-          toast.error("Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services");
-          setIsLoading(false);
-          return;
-        }
+        // Verify OTP and complete registration
+        const response = await axios.post("http://localhost:4000/api/auth/verify-otp", {
+          email: Email,
+          otp,
+          userData: {
+            fullName: FullName.trim(),
+            phoneNumber: phoneInt,
+            address: Address.trim(),
+            password: Password,
+            confirmPassword: ConfirmPassword
+          }
+        });
 
-        if (isNaN(Price) || parseFloat(Price) <= 0) {
-          toast.error("Please enter a valid price greater than 0");
-          setIsLoading(false);
-          return;
+        if (response.data.success) {
+          toast.success("Registration successful!");
+          navigate("/login");
         }
-
-        // Service provider registration data
-        const formData = new FormData();
-        formData.append("fullName", FullName.trim());
-        formData.append("phoneNumber", phoneInt);
-        formData.append("address", Address.trim());
-        formData.append("email", Email.trim().toLowerCase());
-        formData.append("password", Password);
-        formData.append("confirmPassword", ConfirmPassword);
-        formData.append("role", "serviceprovider");
-        formData.append("serviceType", ServiceType.trim().toLowerCase());
-        formData.append("price", Price);
-        formData.append("verificationStatus", "pending");
-        
-        if (verificationDocument) {
-          formData.append("verificationDocument", verificationDocument);
-        }
-        
-        requestData = formData;
       } else {
-        // Customer registration data
-        requestData = {
-          fullName: FullName.trim(),
-          phoneNumber: phoneInt,
-          address: Address.trim(),
-          email: Email.trim().toLowerCase(),
-          password: Password,
-          confirmPassword: ConfirmPassword,
-          role: "customer"
-        };
+        // Existing service provider registration logic
+        let requestData;
+        const isAdmin = Email.includes(".admin@");
+
+        if (isAdmin) {
+          requestData = {
+            fullName: FullName.trim(),
+            phoneNumber: phoneInt,
+            address: Address.trim(),
+            email: Email.trim().toLowerCase(),
+            password: Password,
+            confirmPassword: ConfirmPassword,
+            role: "admin"
+          };
+        } else if (Role === "serviceprovider") {
+          if (!ServiceType || !Price) {
+            toast.error("Please fill in all service provider details!");
+            setIsLoading(false);
+            return;
+          }
+
+          const validServiceTypes = ["house cleaning", "electrician", "painting", "plumbing", "hvac services", "carpentry"];
+          if (!validServiceTypes.includes(ServiceType.toLowerCase())) {
+            toast.error("Invalid service type. Please select from: House Cleaning, Electrician, Painting, Plumbing, or HVAC Services");
+            setIsLoading(false);
+            return;
+          }
+
+          if (isNaN(Price) || parseFloat(Price) <= 0) {
+            toast.error("Please enter a valid price greater than 0");
+            setIsLoading(false);
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("fullName", FullName.trim());
+          formData.append("phoneNumber", phoneInt);
+          formData.append("address", Address.trim());
+          formData.append("email", Email.trim().toLowerCase());
+          formData.append("password", Password);
+          formData.append("confirmPassword", ConfirmPassword);
+          formData.append("role", "serviceprovider");
+          formData.append("serviceType", ServiceType.trim().toLowerCase());
+          formData.append("price", Price);
+          formData.append("verificationStatus", "pending");
+          
+          if (verificationDocument) {
+            formData.append("verificationDocument", verificationDocument);
+          }
+          
+          requestData = formData;
+        }
+
+        const headers = requestData instanceof FormData 
+          ? { 'Content-Type': 'multipart/form-data' }
+          : { 'Content-Type': 'application/json' };
+
+        const request = await axios.post(
+          "http://localhost:4000/api/auth/register",
+          requestData,
+          { headers }
+        );
+
+        toast.success(request.data.message || "Registration successful!");
+        navigate("/login");
       }
-
-      console.log("Sending registration request with data:", 
-        requestData instanceof FormData 
-          ? "FormData (contains file)" 
-          : JSON.stringify(requestData, null, 2)
-      );
-      
-      const headers = requestData instanceof FormData 
-        ? { 'Content-Type': 'multipart/form-data' }
-        : { 'Content-Type': 'application/json' };
-
-      const request = await axios.post(
-        "http://localhost:4000/api/auth/register",
-        requestData,
-        { headers }
-      );
-
-      console.log("Registration response:", request.data);
-      toast.success(request.data.message || "Registration successful!");
-      navigate("/login");
     } catch (error) {
       if (error.response) {
-        console.log("Server Response Status:", error.response.status);
-        console.log("Server Response Data:", error.response.data);
-        console.log("Server Response Headers:", error.response.headers);
-        console.log("Request data that caused error:", JSON.stringify(error.config.data, null, 2));
-        
-        if (error.response.data.errors && error.response.data.errors.length > 0) {
-          console.log("Validation Errors:", error.response.data.errors);
-          error.response.data.errors.forEach(err => {
-            console.log("Error:", err);
-            toast.error(err.message || "Validation error");
-          });
-        } else {
-          toast.error(error.response.data.message || "Registration failed!");
-        }
-      } else if (error.request) {
-        console.log("Request was made but no response received:", error.request);
-        toast.error("No response from server. Please check if the server is running.");
+        toast.error(error.response.data.message || "Registration failed!");
       } else {
-        console.log("Error setting up the request:", error.message);
         toast.error("Something went wrong. Please try again.");
       }
     } finally {
@@ -431,12 +447,36 @@ const Register = () => {
             </>
           )}
 
+          {showOtpInput && Role === "customer" && (
+            <div className="input-group">
+              <label htmlFor="otp" className="input-label">
+                <FaEnvelope className="input-icon" /> Enter OTP
+              </label>
+              <input
+                id="otp"
+                type="text"
+                placeholder="Enter the OTP sent to your email"
+                className="input-field"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                required
+              />
+              <small className="input-hint">Check your email for the OTP</small>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className={`button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >
-            {isLoading ? 'Creating Account...' : 'Sign Up'}
+            {isLoading 
+              ? (Role === "customer" && !isOtpSent 
+                ? 'Sending OTP...' 
+                : 'Creating Account...') 
+              : (Role === "customer" && !isOtpSent 
+                ? 'Send OTP' 
+                : 'Sign Up')}
           </button>
         </form>
 

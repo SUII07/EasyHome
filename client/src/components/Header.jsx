@@ -136,6 +136,16 @@ const Header = ({ onServicesClick }) => {
                 >
                   My Bookings
                 </Link>}
+                {user.role === 'customer' && <Link 
+                  to="/feedback" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMenuOpen(false);
+                    setIsProfileOpen(false);
+                  }}
+                >
+                  Feedback
+                </Link>}
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();

@@ -17,12 +17,14 @@
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  /* align-items: center; */
   height: 100%;
+  margin-left: 8px;
 }
 
 .logo {
-  margin: 0;
+  margin-bottom: 40px;
+  text-align: center;
 }
 
 .logo a {
